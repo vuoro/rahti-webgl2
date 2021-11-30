@@ -1,0 +1,55 @@
+{
+  "name": "rahti-webgl2",
+  "version": "0.0.1",
+  "description": "WebGL2 effects for Rahti",
+  "main": "main.js",
+  "type": "module",
+  "exports": {
+    ".": "./main.js"
+  },
+  "scripts": {
+    "start": "npx @web/dev-server --open --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuoro/rahti-webgl2.git"
+  },
+  "keywords": [
+    "webgl",
+    "webgl2",
+    "reactive",
+    "javascript",
+    "rahti"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vuoro/rahti-webgl2/issues"
+  },
+  "homepage": "https://github.com/vuoro/rahti-webgl2#readme",
+  "devDependencies": {
+    "eslint": "^8.3.0"
+  },
+  "prettier": {
+    "printWidth": 100
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true
+    },
+    "extends": [
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 12,
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-unused-vars": 1
+    }
+  },
+  "dependencies": {
+    "@vuoro/rahti": "^0.1.7"
+  }
+}
