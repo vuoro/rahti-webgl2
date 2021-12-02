@@ -13,10 +13,82 @@
 
   <body>
     <canvas id="canvas"></canvas>
-    <script type="module">
-      import { context } from "./main.js";
 
-      context(document.getElementById("canvas"));
+    <script type="module">
+      import { effect } from "@vuoro/rahti";
+      import {
+        context,
+        uniformBlock,
+        attribute,
+        elements,
+        instances,
+        command,
+        texture,
+      } from "./main.js";
+
+      // is API for resources ok?
+      // and for commands?
+      // write each piece of the API
+
+      const graphics = effect(() => {
+        const thisContext = context(document.getElementById("canvas"));
+
+        const shape = attribute(thisContext, [
+          Float32Array.of(0, 0),
+          Float32Array.of(1, 0),
+          Float32Array.of(1, 1),
+          Float32Array.of(0, 1),
+        ]);
+        const shared = uniformBlock(thisContext, { time: 0, lightColor: [0, 0, 0] });
+        const smallTexture = texture(thisContext, {});
+
+        const triangleElements = elements(thisContext, Int16Array.of(0, 1, 2));
+        const quadElements = elements(thisContext, Int16Array.of(0, 1, 2, 3));
+        const quadInstance = instances(thisContext, { color: [1, 0, 0] });
+
+        const drawTriangle = command(thisContext, {
+          attributes: { shape },
+          uniformBlocks: { shared },
+          textures: { smallTexture },
+          elements: triangleElements,
+          vertex: ``,
+          fragment: ``,
+        });
+
+        const drawQuad = command(thisContext, {
+          attributes: { shape },
+          uniformBlocks: { shared },
+          textures: { smallTexture },
+          elements: quadElements,
+          instances: quadInstance,
+          vertex: ``,
+          fragment: ``,
+        });
+
+        // Later
+        // const framebufferTest = framebuffer({ color: [smallTexture] });
+
+        return {
+          frame: thisContext.frame,
+          commands: { drawTriangle, drawQuad, clear: thisContext.clear },
+          quadInstance,
+          shared,
+        };
+      });
+
+      const app = effect(() => {
+        const { frame, commands, resources, quadInstance, shared } = graphics();
+        const { clear, drawTriangle, drawQuad } = commands;
+
+        frame(() => {
+          clear();
+          drawTriangle({ mode: "LINES" });
+          // drawTriangle({ target: framebufferTest });
+          drawQuad();
+        });
+
+        quadInstance({ color: [1, 0, 0] });
+      });
     </script>
   </body>
 </html>
