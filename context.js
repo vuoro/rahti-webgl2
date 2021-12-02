@@ -75,7 +75,7 @@ export const context = effect(
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
 
-    const setTexture = (texture) => {
+    const setTexture = (texture, TARGET = gl.TEXTURE_2D) => {
       if (currentTexture !== texture) {
         if (!textureIndexes.has(texture)) {
           textureIndexes.set(texture, textureIndexes.size);
@@ -83,7 +83,7 @@ export const context = effect(
 
         const index = textureIndexes.get(texture);
         gl.activeTexture(gl[`TEXTURE${index}`]);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.bindTexture(TARGET, texture);
       }
 
       currentTexture = texture;

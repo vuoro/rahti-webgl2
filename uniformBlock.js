@@ -1,123 +1,112 @@
 import { isServer } from "@vuoro/rahti";
+import { requestPreRenderJob } from "./animation-frame.js";
+import { dataToTypes } from "./buffer.js";
 
-export const uniformBlock = ({ gl, requestRendering }, uniformMap) => {
+export const uniformBlock = (context, uniformMap) => {
   if (isServer) return;
 
-  // let buffer;
-  // state.uniforms = {};
-  // const offsets = new Map();
+  const { gl, setBuffer, requestRendering } = context;
 
-  // state.create = () => {
-  //   const { gl, setBuffer } = renderer;
+  const offsets = new Map();
+  const bindIndex = context.uniformBindIndexCounter++;
 
-  //   state.bindIndex =
-  //     state.bindIndex === undefined ? renderer.uniformBindIndexCounter++ : state.bindIndex;
+  const buffer = gl.createBuffer();
+  setBuffer(buffer, gl.UNIFORM_BUFFER);
+  gl.bindBufferBase(gl.UNIFORM_BUFFER, bindIndex, buffer);
 
-  //   buffer = gl.createBuffer();
-  //   setBuffer(buffer, gl.UNIFORM_BUFFER);
-  //   gl.bindBufferBase(gl.UNIFORM_BUFFER, state.bindIndex, buffer);
+  let byteCounter = 0;
+  let elementCounter = 0;
 
-  //   let byteCounter = 0;
-  //   let elementCounter = 0;
+  const uniforms = {};
 
-  //   const uniforms = Object.entries(context).map(([name, value], index) => {
-  //     const [, shaderType] = dataToTypes(value);
-  //     const elementCount = value.length || 1;
+  for (const key in uniformMap) {
+    const value = uniformMap[key];
 
-  //     // std140 alignment rules
-  //     const [alignment, size] =
-  //       elementCount === 1 ? [1, 1] : elementCount === 2 ? [2, 2] : [4, elementCount];
+    const [, shaderType] = dataToTypes(value);
+    const elementCount = value.length || 1;
 
-  //     // std140 alignment padding
-  //     // | a |...|...|...|b.x|b.y|b.z|b.w| c | d |...|...|
-  //     const padding = (alignment - (elementCounter % alignment)) % alignment;
-  //     elementCounter += padding;
-  //     byteCounter += padding * 4;
+    // std140 alignment rules
+    const [alignment, size] =
+      elementCount === 1 ? [1, 1] : elementCount === 2 ? [2, 2] : [4, elementCount];
 
-  //     let data;
-  //     if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-  //       data = value;
-  //     } else {
-  //       data = [value];
-  //     }
+    // std140 alignment padding
+    // | a |...|...|...|b.x|b.y|b.z|b.w| c | d |...|...|
+    const padding = (alignment - (elementCounter % alignment)) % alignment;
+    elementCounter += padding;
+    byteCounter += padding * 4;
 
-  //     const uniform = {
-  //       shaderType,
-  //       padding,
-  //       size,
-  //       byteOffset: byteCounter,
-  //       elementOffset: elementCounter,
-  //       data,
-  //     };
+    let data;
+    if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+      data = value;
+    } else {
+      data = [value];
+    }
 
-  //     state.uniforms[name] = uniform;
-  //     offsets.set(name, uniform.elementOffset);
+    const uniform = {
+      shaderType,
+      padding,
+      size,
+      byteOffset: byteCounter,
+      elementOffset: elementCounter,
+      data,
+    };
 
-  //     elementCounter += size;
-  //     byteCounter += size * 4;
+    uniforms[key] = uniform;
+    offsets.set(key, uniform.elementOffset);
 
-  //     return uniform;
-  //   });
+    elementCounter += size;
+    byteCounter += size * 4;
+  }
 
-  //   const endPadding = (4 - (elementCounter % 4)) % 4;
-  //   elementCounter += endPadding;
+  const endPadding = (4 - (elementCounter % 4)) % 4;
+  elementCounter += endPadding;
 
-  //   state.allData = new Float32Array(elementCounter);
+  const allData = new Float32Array(elementCounter);
+  const { BYTES_PER_ELEMENT } = allData;
 
-  //   uniforms.forEach(({ data, elementOffset }) => state.allData.set(data, elementOffset));
+  for (const key in uniforms) {
+    const { data, elementOffset } = uniforms[key];
+    allData.set(data, elementOffset);
+  }
 
-  //   gl.bufferData(gl.UNIFORM_BUFFER, state.allData, gl.DYNAMIC_DRAW);
+  gl.bufferData(gl.UNIFORM_BUFFER, allData, gl.DYNAMIC_DRAW);
 
-  //   state.created = true;
-  //   requestRendering();
+  let firstDirty = Infinity;
+  let lastDirty = 0;
 
-  //   if (pendingUpdates.size) {
-  //     for (const update of pendingUpdates) {
-  //       state.update(...update);
-  //     }
-  //     pendingUpdates.clear();
-  //   }
+  const update = (key, data) => {
+    const length = data.length || 1;
+    const offset = offsets.get(key);
 
-  //   if (renderer.debug) console.log("Created context uniform block", context, state);
-  // };
+    firstDirty = Math.min(offset, firstDirty);
+    lastDirty = Math.max(offset + length, lastDirty);
 
-  // state.update = (key, data) => {
-  //   if (state.created) {
-  //     const length = data.length || 1;
-  //     const offset = offsets.get(key);
+    if (data.length) {
+      allData.set(data, offset);
+    } else {
+      allData[offset] = data;
+    }
 
-  //     firstDirty = Math.min(offset, firstDirty);
-  //     lastDirty = Math.max(offset + length, lastDirty);
+    requestPreRenderJob(commitUpdate);
+  };
 
-  //     if (data.length) {
-  //       state.allData.set(data, offset);
-  //     } else {
-  //       state.allData[offset] = data;
-  //     }
+  const { UNIFORM_BUFFER } = gl;
 
-  //     requestJob(state.commitUpdate);
-  //   } else {
-  //     pendingUpdates.add([key, data]);
-  //   }
-  // };
+  const commitUpdate = () => {
+    setBuffer(buffer, UNIFORM_BUFFER);
+    gl.bufferSubData(
+      UNIFORM_BUFFER,
+      firstDirty * BYTES_PER_ELEMENT,
+      allData,
+      firstDirty,
+      lastDirty - firstDirty
+    );
 
-  // state.commitUpdate = () => {
-  //   if (renderer.debug)
-  //     console.log("Updating uniform block", state.name, state.allData, firstDirty, lastDirty);
+    firstDirty = Infinity;
+    lastDirty = 0;
 
-  //   const { gl, setBuffer } = renderer;
-  //   setBuffer(buffer, gl.UNIFORM_BUFFER);
-  //   gl.bufferSubData(
-  //     gl.UNIFORM_BUFFER,
-  //     firstDirty * state.allData.BYTES_PER_ELEMENT,
-  //     state.allData,
-  //     firstDirty,
-  //     lastDirty - firstDirty
-  //   );
+    requestRendering();
+  };
 
-  //   firstDirty = Infinity;
-  //   lastDirty = 0;
-
-  //   requestRendering();
-  // };
+  return { uniforms, update };
 };

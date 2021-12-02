@@ -1,121 +1,77 @@
 import { isServer } from "@vuoro/rahti";
 
-export const texture = ({ gl, requestRendering }, { width, height, pixels }) => {
+const defaultParameters = {
+  TEXTURE_MAG_FILTER: "NEAREST",
+  TEXTURE_MIN_FILTER: "NEAREST",
+};
+
+export const texture = (
+  { gl, setTexture, textureIndexes, requestRendering },
+  {
+    shaderType = "sampler2D",
+    target = "TEXTURE_2D",
+    setter = "texImage2D",
+    updater = "texSubImage2D",
+    level = 0,
+    format = "RGBA",
+    internalFormat = "RGBA32F",
+    type = "FLOAT",
+    border = 0,
+    offset,
+    pixels = null,
+    width: inputWidth,
+    height: inputHeight,
+    parameters = defaultParameters,
+  }
+) => {
   if (isServer) return;
 
-  // // Texture
-  // let texture;
-  // let _TEXTURE_2D;
-  // let _level, _format, _internalFormat, _type;
+  const TARGET = gl[target];
+  const FORMAT = gl[format];
+  const INTERNAL_FORMAT = gl[internalFormat];
+  const TYPE = gl[type];
 
-  // state.create = () => {
-  //   const { gl, setTexture } = renderer;
-  //   texture = gl.createTexture();
-  //   setTexture(texture);
-  //   state.index = textureIndexes.get(texture);
+  const texture = gl.createTexture();
+  setTexture(texture, TARGET);
 
-  //   const {
-  //     sampler = "sampler2D",
-  //     level = 0,
-  //     format = "RGBA",
-  //     internalFormat = "RGBA32F",
-  //     type = "FLOAT",
-  //     channels = 4,
-  //     border = 0,
-  //     offset,
-  //     pixels: inputPixels,
-  //     width: inputWidth,
-  //     height: inputHeight,
-  //     ...inputParameters
-  //   } = context;
+  const pixelsAreABuffer = !pixels || ArrayBuffer.isView(pixels);
+  const width = pixelsAreABuffer && (inputWidth || 64);
+  const height = pixelsAreABuffer && (inputHeight || 64);
+  let allData = pixels || null;
 
-  //   const pixelsAreABuffer = !inputPixels || ArrayBuffer.isView(inputPixels);
-  //   const width = pixelsAreABuffer && (inputWidth || 64);
-  //   const height = pixelsAreABuffer && (inputHeight || 64);
-  //   state.allData = context.pixels || null;
+  for (const key in parameters) {
+    gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
+  }
 
-  //   state.shaderType = sampler;
-  //   _level = level;
-  //   _format = gl[format];
-  //   _internalFormat = gl[internalFormat];
-  //   _type = gl[type];
+  if (pixelsAreABuffer) {
+    gl.texImage2D(
+      TARGET,
+      level,
+      INTERNAL_FORMAT,
+      width,
+      height,
+      border,
+      FORMAT,
+      TYPE,
+      allData,
+      offset
+    );
+  } else {
+    gl[setter](TARGET, level, INTERNAL_FORMAT, FORMAT, TYPE, allData);
+  }
 
-  //   const parameters = {
-  //     TEXTURE_MAG_FILTER: "NEAREST",
-  //     TEXTURE_MIN_FILTER: "NEAREST",
-  //     ...inputParameters,
-  //   };
+  const set = (data) => {
+    allData = data;
 
-  //   for (const key in parameters) {
-  //     gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
-  //   }
+    setTexture(texture, TARGET);
+    gl[setter](TARGET, level, INTERNAL_FORMAT, FORMAT, TYPE, allData);
+    requestRendering();
+  };
 
-  //   if (pixelsAreABuffer) {
-  //     gl.texImage2D(
-  //       gl.TEXTURE_2D,
-  //       level,
-  //       _internalFormat,
-  //       width,
-  //       height,
-  //       border,
-  //       _format,
-  //       _type,
-  //       state.allData,
-  //       offset
-  //     );
-  //   } else {
-  //     gl.texImage2D(gl.TEXTURE_2D, level, _internalFormat, _format, _type, state.allData);
-  //   }
+  const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset) => {
+    setTexture(texture, TARGET);
+    gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
+  };
 
-  //   _TEXTURE_2D = gl.TEXTURE_2D;
-
-  //   state.created = true;
-  //   requestRendering();
-
-  //   if (pendingUpdates.size) {
-  //     for (const [isRefill, update] of pendingUpdates) {
-  //       state[isRefill ? "refill" : "update"](...update);
-  //     }
-  //     pendingUpdates.clear();
-  //   }
-
-  //   if (renderer.debug) console.log("Created context texture", context, state);
-  // };
-
-  // state.refill = (data) => {
-  //   if (state.created) {
-  //     const { gl, setTexture } = renderer;
-
-  //     state.allData = data;
-
-  //     setTexture(texture);
-  //     gl.texImage2D(gl.TEXTURE_2D, _level, _internalFormat, _format, _type, state.allData);
-  //     requestRendering();
-  //   } else {
-  //     pendingUpdates.add([true, [data]]);
-  //   }
-  // };
-
-  // state.update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset) => {
-  //   if (state.created) {
-  //     const { gl, setTexture } = renderer;
-  //     setTexture(texture);
-
-  //     gl.texSubImage2D(
-  //       _TEXTURE_2D,
-  //       _level,
-  //       x,
-  //       y,
-  //       width,
-  //       height,
-  //       _format,
-  //       _type,
-  //       data,
-  //       dataOffset
-  //     );
-  //   } else {
-  //     pendingUpdates.add([false, [data, x, y, width, height, dataOffset]]);
-  //   }
-
-  //   requestRendering();
+  return { shaderType, set, update };
 };

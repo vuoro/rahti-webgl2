@@ -1,4 +1,4 @@
-import { isServer, effect, state, onCleanup } from "@vuoro/rahti";
+import { isServer, effect, onCleanup } from "@vuoro/rahti";
 
 const blank = {};
 
