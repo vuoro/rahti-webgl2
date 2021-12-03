@@ -42,7 +42,9 @@
           Float32Array.of(0, 1),
         ]);
         const shared = uniformBlock(thisContext, { time: 0, lightColor: [0, 0, 0] });
-        const smallTexture = texture(thisContext, {});
+        const smallTexture = texture(thisContext, {
+          pixels: new Float32Array(64 * 64 * 4).fill(0.2),
+        });
         const [cameraController, camera] = createCamera(thisContext);
 
         const triangleElements = elements(thisContext, Int16Array.of(0, 1, 2));
@@ -63,7 +65,7 @@
             out vec4 fragment;
 
             void main () {
-              fragment = vec4(1.0, 0.0, 0.0, 1.0);
+              fragment = vec4(texture(smallTexture, vec2(1)).xyz, 1.0);
             }
           `,
         });

@@ -186,6 +186,7 @@ export const context = effect(
       setDepth,
       setCull,
       setTexture,
+      textureIndexes,
       setFramebuffer,
       setClear,
       clear,

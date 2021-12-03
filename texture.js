@@ -6,7 +6,7 @@ const defaultParameters = {
 };
 
 export const texture = (
-  { gl, setTexture, requestRendering },
+  { gl, setTexture, requestRendering, textureIndexes },
   {
     shaderType = "sampler2D",
     target = "TEXTURE_2D",
@@ -22,7 +22,7 @@ export const texture = (
     width = 64,
     height = 64,
     parameters = defaultParameters,
-  }
+  } = {}
 ) => {
   if (isServer) return;
 
@@ -71,5 +71,5 @@ export const texture = (
     gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
   };
 
-  return { shaderType, set, update };
+  return { shaderType, set, update, index: textureIndexes.get(texture) };
 };
