@@ -1,8 +1,8 @@
 import { isServer } from "@vuoro/rahti";
 
 const animationFrameSets = new Map();
-const animationFrameJobs = new Set();
-const animationFrameRenderJobs = new Set();
+const preRenderJobs = new Set();
+const renderJobs = new Set();
 let frameNumber = 0;
 let totalSubscribers = 0;
 let frame = null;
@@ -29,14 +29,16 @@ export const unsubscribeFromAnimationFrame = (callback, nthFrame) => () => {
 };
 
 export const requestPreRenderJob = (job) => {
-  animationFrameJobs.add(job);
+  preRenderJobs.add(job);
+  frame = frame || requestAnimationFrame(animationFrame);
+};
+export const requestRenderJob = (job) => {
+  renderJobs.add(job);
   frame = frame || requestAnimationFrame(animationFrame);
 };
 
-export const requestRenderJob = (job) => {
-  animationFrameRenderJobs.add(job);
-  frame = frame || requestAnimationFrame(animationFrame);
-};
+export const cancelPreRenderJob = (job) => preRenderJobs.delete(job);
+export const cancelRenderJob = (job) => renderJobs.delete(job);
 
 export const cancelJobsAndStopFrame = () => {
   if (frame) {
@@ -44,8 +46,8 @@ export const cancelJobsAndStopFrame = () => {
     frame = null;
   }
 
-  animationFrameJobs.clear();
-  animationFrameRenderJobs.clear();
+  preRenderJobs.clear();
+  renderJobs.clear();
 };
 
 const animationFrame = (timestamp) => {
@@ -57,15 +59,15 @@ const animationFrame = (timestamp) => {
     }
   }
 
-  for (const job of animationFrameJobs) {
+  for (const job of preRenderJobs) {
     job();
   }
-  animationFrameJobs.clear();
+  preRenderJobs.clear();
 
-  for (const job of animationFrameRenderJobs) {
+  for (const job of renderJobs) {
     job();
   }
-  animationFrameRenderJobs.clear();
+  renderJobs.clear();
 
   frameNumber++;
 

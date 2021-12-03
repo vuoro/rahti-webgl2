@@ -14,20 +14,13 @@ export const instances = effect((context, attributeMap) => {
     const bufferObject = buffer(context, [value], undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
-    attributes.set(key, {
-      bufferObject,
-      defaultValue: value.length ? new Constructor(value) : new Constructor.of(value),
-    });
+    bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor.of(value);
+
+    attributes.set(key, bufferObject);
   }
 
   const instances = new Set();
   const instanceOffsets = new Map();
-
-  onCleanup(() => {
-    attributes.clear();
-    instances.clear();
-    instanceOffsets.clear();
-  });
 
   const buildInstances = () => {
     instanceOffsets.clear();
@@ -58,7 +51,7 @@ export const instances = effect((context, attributeMap) => {
   const instanceCreator = effect(() => {
     const instance = new Map();
 
-    for (const { key, defaultValue } of attributes) {
+    for (const [key, { defaultValue }] of attributes) {
       instance.set(
         key,
         Array.isArray(defaultValue)
@@ -88,12 +81,18 @@ export const instances = effect((context, attributeMap) => {
     requestRendering();
   });
 
-  const instanceEffect = effect((instanceAttributes) => {
+  const instanceEffect = effect((key, instanceAttributes) => {
     const instance = instanceCreator(attributes, requestRendering, buildInstances);
 
     for (const key in instanceAttributes) {
       instanceUpdater(instance, key, instanceAttributes[key]);
     }
+  });
+
+  onCleanup(() => {
+    attributes.clear();
+    instances.clear();
+    instanceOffsets.clear();
   });
 
   instanceEffect.attributes = attributes;

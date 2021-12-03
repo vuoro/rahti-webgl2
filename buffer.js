@@ -1,5 +1,5 @@
 import { effect, isServer, onCleanup } from "@vuoro/rahti";
-import { requestPreRenderJob } from "./animation-frame.js";
+import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
 export const buffer = effect(
   (
@@ -18,20 +18,37 @@ export const buffer = effect(
     const buffer = gl.createBuffer();
     setBuffer(buffer, BINDING);
 
-    onCleanup(() => {
-      gl.deleteBuffer(buffer);
-    });
+    const dimensions = data[0].length || 1;
+    let allData = new Constructor(data.length * dimensions);
 
-    let dataForBuffer = new Constructor(data.flatMap((v) => v));
-    const { BYTES_PER_ELEMENT } = dataForBuffer;
+    for (let index = 0; index < data.length; index++) {
+      const datum = data[index];
+
+      if (dimensions > 1) {
+        allData.set(datum, index * dimensions);
+      } else {
+        allData[index] = datum;
+      }
+    }
+
+    const { BYTES_PER_ELEMENT } = allData;
     const count = data.length;
     const USAGE = gl[usage];
-    const dimensions = data[0].length || 1;
 
     const countSubscribers = new Set();
 
-    const set = (data = dataForBuffer) => {
-      dataForBuffer = data;
+    const bufferObject = {
+      buffer,
+      bufferType,
+      shaderType,
+      Constructor,
+      count,
+      dimensions,
+      countSubscribers,
+    };
+
+    const set = (data = allData) => {
+      allData = data;
       bufferObject.count = data.length / dimensions;
       setBuffer(buffer, BINDING);
       gl.bufferData(BINDING, data, USAGE);
@@ -43,18 +60,6 @@ export const buffer = effect(
 
     requestPreRenderJob(set);
 
-    const bufferObject = {
-      buffer,
-      bufferType,
-      shaderType,
-      Constructor,
-      set,
-      update,
-      count,
-      dimensions,
-      countSubscribers,
-    };
-
     let firstDirty = Infinity;
     let lastDirty = 0;
 
@@ -65,9 +70,9 @@ export const buffer = effect(
       lastDirty = Math.max(offset + length, lastDirty);
 
       if (length) {
-        dataForBuffer.set(data, offset);
+        allData.set(data, offset);
       } else {
-        dataForBuffer[offset] = data;
+        allData[offset] = data;
       }
 
       requestPreRenderJob(commitUpdates);
@@ -78,7 +83,7 @@ export const buffer = effect(
       gl.bufferSubData(
         BINDING,
         firstDirty * BYTES_PER_ELEMENT,
-        dataForBuffer,
+        allData,
         firstDirty,
         lastDirty - firstDirty
       );
@@ -86,6 +91,15 @@ export const buffer = effect(
       firstDirty = Infinity;
       lastDirty = 0;
     };
+
+    onCleanup(() => {
+      gl.deleteBuffer(buffer);
+      cancelPreRenderJob(commitUpdates);
+      cancelPreRenderJob(set);
+    });
+
+    bufferObject.set = set;
+    bufferObject.update = update;
 
     return bufferObject;
   }

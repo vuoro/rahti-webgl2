@@ -6,7 +6,7 @@ const defaultAttributes = {
 };
 
 const defaultOptions = {
-  clearColor: [0, 0, 0, 1],
+  clearColor: [1, 1, 1, 1],
   pixelRatio: 1,
 };
 
@@ -136,7 +136,6 @@ export const context = effect(
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
         for (const subscriber of resizeSubscribers) {
-          // TODO: this should tell pipelines or whatever to requestRenderJob(pipeline.render)
           subscriber(0, 0, width, height, ratio);
         }
 
@@ -150,7 +149,6 @@ export const context = effect(
       console.log("context lost");
       event.preventDefault();
       cancelJobsAndStopFrame();
-      // TODO: prevent rendering until restored
     };
     const handleRestored = () => {
       console.log("restoring context");
@@ -168,7 +166,7 @@ export const context = effect(
     });
 
     let renderFunction;
-    const render = (renderPass) => {
+    const frame = (renderPass) => {
       renderFunction = renderPass;
       requestRendering();
     };
@@ -193,7 +191,7 @@ export const context = effect(
       clear,
       resizeSubscribers,
       uniformBindIndexCounter: 0,
-      render,
+      frame,
       requestRendering,
     };
   }

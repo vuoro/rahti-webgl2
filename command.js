@@ -22,9 +22,9 @@ export const command = effect(
       vertexPrecision = ``,
       fragmentPrecision = `#ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
-  #else
+#else
   precision mediump float;
-  #endif`,
+#endif`,
 
       // Can be overridden at runtime
       mode = "TRIANGLES",
@@ -43,7 +43,9 @@ export const command = effect(
     if (isServer) return;
     if (!vertex || !fragment) throw new Error("missing vertex or fragment shader");
     if (attributes === blank) throw new Error("missing at least one attribute");
+
     const isInstanced = !!instances;
+    const instanceSet = instances?.instances;
     const usesElements = !!elements;
     const UNSIGNED_SHORT = gl.UNSIGNED_SHORT;
 
@@ -58,8 +60,7 @@ export const command = effect(
     }
 
     if (instances) {
-      for (const key in instances.attributes) {
-        const { shaderType } = instances.attributes[key];
+      for (const [key, { shaderType }] of instances.attributes) {
         attributeLines += `in ${shaderType} ${key};\n`;
       }
     }
@@ -79,9 +80,20 @@ export const command = effect(
       uniformBlockLines += `};\n`;
     }
 
-    const finalVertex =
-      shaderVersion + vertexPrecision + attributeLines + textureLines + uniformBlockLines + vertex;
-    const finalFragment = fragmentPrecision + textureLines + uniformBlockLines + fragment;
+    const finalVertex = `${shaderVersion}
+${vertexPrecision}
+${attributeLines}
+${textureLines}
+${uniformBlockLines}
+${vertex}`;
+    const finalFragment = `${shaderVersion}
+${fragmentPrecision}
+${textureLines}
+${uniformBlockLines}
+${fragment}`;
+
+    // console.log(finalVertex);
+    // console.log(finalFragment);
 
     // Compile shaders and log errors
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -113,21 +125,19 @@ export const command = effect(
     setVao(vao);
 
     // Elements
-    if (usesElements) setBuffer(elements.buffer, "ELEMENT_ARRAY_BUFFER");
+    if (usesElements) setBuffer(elements.buffer, gl.ELEMENT_ARRAY_BUFFER);
 
     // Attribute vertex count
     let count = Infinity;
     const measureCount = () => {
       count = Infinity;
-      for (const attribute of attributes) {
+      for (const key in attributes) {
+        const attribute = attributes[key];
         count = Math.min(count, attribute.count);
+        attribute.countSubscribers.add(measureCount);
       }
     };
     measureCount();
-
-    for (const { countSubscribers } of attributes) {
-      countSubscribers.add(measureCount);
-    }
 
     // Rahti cleanup
     onCleanup(() => {
@@ -146,8 +156,9 @@ export const command = effect(
       const { name } = gl.getActiveAttrib(program, i);
       const location = gl.getAttribLocation(program, name);
 
-      const attribute = attributes[name] || instances?.attributes[name];
-      const isInstanced = instances?.attributes[name];
+      const instancedAttribute = instances?.attributes.get(name);
+      const attribute = attributes[name] || instancedAttribute;
+      const isInstanced = !!instancedAttribute;
 
       if (location === -1 || !attribute) {
         console.warn(`Failed linking attribute ${name}`);
@@ -214,7 +225,7 @@ export const command = effect(
       }
     } else {
       if (usesElements) {
-        executeRender = (mode, count) => gl.drawElementsInstanced(mode, count, UNSIGNED_SHORT, 0);
+        executeRender = (mode, count) => gl.drawElements(mode, count, UNSIGNED_SHORT, 0);
       } else {
         executeRender = (mode, count) => gl.drawArrays(mode, 0, count);
       }
@@ -225,9 +236,9 @@ export const command = effect(
       overrideDepth = depth,
       overrideCull = cull,
       overrideCount = usesElements ? elements.count : count,
-      overrideInstanceCount = isInstanced && instances.size
+      overrideInstanceCount = isInstanced && instanceSet.size
     ) => {
-      if (isInstanced && !instances.size) return;
+      if (isInstanced && !overrideInstanceCount) return;
 
       setProgram(program);
       setVao(vao);

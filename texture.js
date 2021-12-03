@@ -6,7 +6,7 @@ const defaultParameters = {
 };
 
 export const texture = (
-  { gl, setTexture, textureIndexes, requestRendering },
+  { gl, setTexture, requestRendering },
   {
     shaderType = "sampler2D",
     target = "TEXTURE_2D",
@@ -19,8 +19,8 @@ export const texture = (
     border = 0,
     offset,
     pixels = null,
-    width: inputWidth,
-    height: inputHeight,
+    width = 64,
+    height = 64,
     parameters = defaultParameters,
   }
 ) => {
@@ -34,39 +34,37 @@ export const texture = (
   const texture = gl.createTexture();
   setTexture(texture, TARGET);
 
-  const pixelsAreABuffer = !pixels || ArrayBuffer.isView(pixels);
-  const width = pixelsAreABuffer && (inputWidth || 64);
-  const height = pixelsAreABuffer && (inputHeight || 64);
   let allData = pixels || null;
 
   for (const key in parameters) {
     gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
   }
 
-  if (pixelsAreABuffer) {
-    gl.texImage2D(
-      TARGET,
-      level,
-      INTERNAL_FORMAT,
-      width,
-      height,
-      border,
-      FORMAT,
-      TYPE,
-      allData,
-      offset
-    );
-  } else {
-    gl[setter](TARGET, level, INTERNAL_FORMAT, FORMAT, TYPE, allData);
-  }
-
-  const set = (data) => {
+  const set = (data, offset) => {
     allData = data;
-
     setTexture(texture, TARGET);
-    gl[setter](TARGET, level, INTERNAL_FORMAT, FORMAT, TYPE, allData);
+
+    if (offset !== undefined) {
+      gl[setter](
+        TARGET,
+        level,
+        INTERNAL_FORMAT,
+        width,
+        height,
+        border,
+        FORMAT,
+        TYPE,
+        allData,
+        offset
+      );
+    } else {
+      gl[setter](TARGET, level, INTERNAL_FORMAT, width, height, border, FORMAT, TYPE, allData);
+    }
+
     requestRendering();
   };
+
+  set(allData, offset);
 
   const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset) => {
     setTexture(texture, TARGET);

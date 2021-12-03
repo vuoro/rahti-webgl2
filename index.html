@@ -15,7 +15,7 @@
     <canvas id="canvas"></canvas>
 
     <script type="module">
-      import { effect } from "@vuoro/rahti";
+      import { effect, state } from "@vuoro/rahti";
       import {
         context,
         uniformBlock,
@@ -43,16 +43,27 @@
         const smallTexture = texture(thisContext, {});
 
         const triangleElements = elements(thisContext, Int16Array.of(0, 1, 2));
-        const quadElements = elements(thisContext, Int16Array.of(0, 1, 2, 3));
-        const quadInstance = instances(thisContext, { color: [1, 0, 0] });
+        const quadElements = elements(thisContext, Int16Array.of(0, 1, 2, 2, 3, 0));
+
+        const quadInstance = instances(thisContext, { color: [0, 0, 0], offset: [0, 0] });
 
         const drawTriangle = command(thisContext, {
           attributes: { shape },
           uniformBlocks: { shared },
           textures: { smallTexture },
-          elements: triangleElements,
-          vertex: ``,
-          fragment: ``,
+          // elements: triangleElements,
+          vertex: `
+            void main () {
+              gl_Position = vec4(shape, 0.0, 1.0);
+            }
+          `,
+          fragment: `
+            out vec4 fragment;
+
+            void main () {
+              fragment = vec4(1.0, 0.0, 0.0, 1.0);
+            }
+          `,
         });
 
         const drawQuad = command(thisContext, {
@@ -61,8 +72,22 @@
           textures: { smallTexture },
           elements: quadElements,
           instances: quadInstance,
-          vertex: ``,
-          fragment: ``,
+          vertex: `
+            out vec3 colorOut;
+
+            void main () {
+              colorOut = color;
+              gl_Position = vec4(shape + offset, 0.0, 1.0);
+            }
+          `,
+          fragment: `
+            in vec3 colorOut;
+            out vec4 fragment;
+
+            void main () {
+              fragment = vec4(colorOut, 1.0);
+            }
+          `,
         });
 
         // Later
@@ -82,13 +107,30 @@
 
         frame(() => {
           clear();
-          drawTriangle({ mode: "LINES" });
-          // drawTriangle({ target: framebufferTest });
+          drawTriangle();
+          drawTriangle("LINES");
           drawQuad();
         });
 
-        quadInstance({ color: [1, 0, 0] });
+        for (let index = 1; index < 13; index++) {
+          quad(index, quadInstance);
+        }
       });
+
+      const counter = state(0, (get, set) => ({ increment: () => set(get() + 1) }));
+
+      const quad = effect((index, quadInstance) => {
+        const [, { increment }] = counter();
+
+        setTimeout(increment, Math.random() * 5000);
+
+        quadInstance(index, {
+          color: [Math.random(), Math.random(), Math.random()],
+          offset: Float32Array.of(-index * 0.1, -index * 0.1),
+        });
+      });
+
+      app();
     </script>
   </body>
 </html>
