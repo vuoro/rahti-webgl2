@@ -77,7 +77,9 @@ export const instances = effect((context, attributeMap) => {
 
   const instanceUpdater = effect((instance, key, value) => {
     instance.set(key, value);
-    attributes.get(key).update(value, instanceOffsets.get(instance));
+    const { update, dimensions } = attributes.get(key);
+    const offset = instanceOffsets.get(instance);
+    if (offset) update(value, offset * dimensions);
     requestRendering();
   });
 
