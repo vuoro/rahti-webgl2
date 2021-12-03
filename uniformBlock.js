@@ -112,5 +112,5 @@ export const uniformBlock = effect((context, uniformMap) => {
     cancelPreRenderJob(commitUpdate);
   });
 
-  return { uniforms, update };
+  return { uniforms, update, bindIndex };
 });

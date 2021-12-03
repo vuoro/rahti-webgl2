@@ -50,6 +50,7 @@
     }
   },
   "dependencies": {
-    "@vuoro/rahti": "^0.1.7"
+    "@vuoro/rahti": "^0.1.7",
+    "gl-mat4-esm": "^1.1.4"
   }
 }
