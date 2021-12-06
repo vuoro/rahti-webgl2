@@ -96,7 +96,9 @@ export const instances = effect((context, attributeMap) => {
       requestRendering();
     },
     (a, b) => {
-      if (a && b) {
+      if (typeof a !== typeof b) return false;
+
+      if (typeof a === "object" && !(Symbol.iterator in a)) {
         // Shallow-compare attributes
         for (const key in a) {
           if (!(key in b) || a[key] !== b[key]) {
