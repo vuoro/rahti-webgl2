@@ -1,8 +1,8 @@
 import { isServer } from "@vuoro/rahti";
 
 const animationFrameSets = new Map();
-const preRenderJobs = new Set();
-const renderJobs = new Set();
+export const preRenderJobs = new Set();
+export const renderJobs = new Set();
 let frameNumber = 0;
 let totalSubscribers = 0;
 let frame = null;

@@ -1,5 +1,5 @@
 import { effect, isServer, onCleanup } from "@vuoro/rahti";
-import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
+import { cancelPreRenderJob, preRenderJobs, requestPreRenderJob } from "./animation-frame.js";
 
 export const buffer = effect(
   (
@@ -47,6 +47,9 @@ export const buffer = effect(
       countSubscribers,
     };
 
+    let firstDirty = Infinity;
+    let lastDirty = 0;
+
     const set = (data = allData) => {
       allData = data;
       bufferObject.count = data.length / dimensions;
@@ -56,12 +59,15 @@ export const buffer = effect(
       for (const subscriber of countSubscribers) {
         subscriber(bufferObject.count);
       }
+
+      if (preRenderJobs.has(commitUpdates)) {
+        preRenderJobs.delete(commitUpdates);
+        firstDirty = Infinity;
+        lastDirty = 0;
+      }
     };
 
     requestPreRenderJob(set);
-
-    let firstDirty = Infinity;
-    let lastDirty = 0;
 
     const update = (data, offset) => {
       const length = data.length;
