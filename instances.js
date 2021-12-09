@@ -75,30 +75,29 @@ export const instances = effect((context, attributeMap) => {
     return instance;
   });
 
-  const instanceAttributes = effect(
-    (instance, newAttributes) => {
-      for (const key in newAttributes) {
-        const { dimensions, defaultValue, update } = attributes.get(key);
-        const offset = instanceOffsets.get(instance);
+  const instanceAttribute = effect(
+    (key, value, instance) => {
+      instance.set(key, value);
+      const { dimensions, defaultValue, update } = attributes.get(key);
+      const offset = instanceOffsets.get(instance);
 
-        if (offset !== undefined) {
-          const value = newAttributes[key];
-          instance.set(key, value);
-          update(value, offset * dimensions);
+      if (offset !== undefined) {
+        update(value, offset * dimensions);
+        requestRendering();
 
-          onCleanup(() => {
+        onCleanup((isFinal) => {
+          if (isFinal) {
             instance.set(key, defaultValue);
             update(defaultValue, offset * dimensions);
-          });
-        }
+            requestRendering();
+          }
+        });
       }
-
-      requestRendering();
     },
     (a, b) => {
       if (typeof a !== typeof b) return false;
 
-      if (typeof a === "object" && !(Symbol.iterator in a)) {
+      if (typeof a === "object") {
         // Shallow-compare attributes
         for (const key in a) {
           if (!(key in b) || a[key] !== b[key]) {
@@ -118,8 +117,10 @@ export const instances = effect((context, attributeMap) => {
   );
 
   const instanceEffect = effect((key, newAttributes) => {
-    const instance = instanceCreator(attributes, requestRendering, buildInstances);
-    instanceAttributes(instance, newAttributes);
+    const instance = instanceCreator();
+    for (const [key] of attributes) {
+      if (key in newAttributes) instanceAttribute(key, newAttributes[key], instance);
+    }
   });
 
   onCleanup(() => {

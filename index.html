@@ -131,7 +131,7 @@
       const quad = effect((index, quadInstance) => {
         const [, { increment }] = counter();
 
-        setTimeout(increment, Math.random() * 1000);
+        setTimeout(increment, Math.random() * 3000);
 
         quadInstance(index, {
           color: [Math.random(), Math.random(), Math.random()],
