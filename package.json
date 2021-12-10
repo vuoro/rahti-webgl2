@@ -1,6 +1,6 @@
 {
   "name": "rahti-webgl2",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "WebGL2 effects for Rahti",
   "main": "main.js",
   "type": "module",

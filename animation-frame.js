@@ -30,10 +30,12 @@ export const unsubscribeFromAnimationFrame = (callback, nthFrame) => () => {
 
 export const requestPreRenderJob = (job) => {
   preRenderJobs.add(job);
+  if (isServer) return;
   frame = frame || requestAnimationFrame(animationFrame);
 };
 export const requestRenderJob = (job) => {
   renderJobs.add(job);
+  if (isServer) return;
   frame = frame || requestAnimationFrame(animationFrame);
 };
 

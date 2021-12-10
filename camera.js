@@ -1,5 +1,5 @@
 import { create, perspective, ortho, lookAt, multiply, invert } from "gl-mat4-esm";
-import { effect } from "@vuoro/rahti";
+import { effect, isServer } from "@vuoro/rahti";
 import { uniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
 
@@ -8,7 +8,7 @@ export const createCamera = effect((context, props = {}) => {
 
   let width = context?.gl?.drawingBufferWidth || 1;
   let height = context?.gl?.drawingBufferHeight || 1;
-  let pixelRatio = window?.devicePixelRatio || 1;
+  let pixelRatio = isServer ? 1 : window.devicePixelRatio;
   let projectionNeedsUpdate = true;
 
   const projection = create();
