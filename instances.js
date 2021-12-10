@@ -52,14 +52,7 @@ export const instances = effect((context, attributeMap) => {
     const instance = new Map();
 
     for (const [key, { defaultValue }] of attributes) {
-      instance.set(
-        key,
-        Array.isArray(defaultValue)
-          ? [...defaultValue]
-          : ArrayBuffer.isView(defaultValue)
-          ? new defaultValue.constructor(defaultValue)
-          : defaultValue
-      );
+      instance.set(key, defaultValue);
     }
 
     instances.add(instance);
