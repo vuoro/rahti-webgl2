@@ -118,8 +118,10 @@ export const instances = effect((context, attributeMap) => {
 
   const instanceEffect = effect((key, newAttributes) => {
     const instance = instanceCreator();
-    for (const [key] of attributes) {
-      if (key in newAttributes) instanceAttribute(key, newAttributes[key], instance);
+    if (newAttributes) {
+      for (const [key] of attributes) {
+        if (key in newAttributes) instanceAttribute(key, newAttributes[key], instance);
+      }
     }
   });
 
