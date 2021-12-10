@@ -3,7 +3,7 @@ import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 import { dataToTypes } from "./buffer.js";
 
 export const uniformBlock = effect((context, uniformMap) => {
-  if (isServer) return;
+  if (isServer) return {};
 
   const { gl, setBuffer, requestRendering } = context;
 

@@ -24,7 +24,7 @@ export const texture = (
     parameters = defaultParameters,
   } = {}
 ) => {
-  if (isServer) return;
+  if (isServer) return {};
 
   const TARGET = gl[target];
   const FORMAT = gl[format];

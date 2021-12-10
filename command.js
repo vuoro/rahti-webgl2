@@ -40,7 +40,7 @@ export const command = effect(
       // attachments, https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_draw_buffers
     }
   ) => {
-    if (isServer) return;
+    if (isServer) return {};
     if (!vertex || !fragment) throw new Error("missing vertex or fragment shader");
     if (attributes === blank) throw new Error("missing at least one attribute");
 

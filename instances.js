@@ -3,7 +3,7 @@ import { requestPreRenderJob } from "./animation-frame.js";
 import { buffer } from "./buffer.js";
 
 export const instances = effect((context, attributeMap) => {
-  if (isServer) return;
+  if (isServer) return {};
   const { requestRendering } = context;
 
   const attributes = new Map();

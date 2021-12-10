@@ -8,7 +8,7 @@ export const createCamera = effect((context, props = {}) => {
 
   let width = context?.gl?.drawingBufferWidth || 1;
   let height = context?.gl?.drawingBufferHeight || 1;
-  let pixelRatio = isServer ? 1 : window.devicePixelRatio;
+  let pixelRatio = isServer ? 1 : window.devicePixelRatio || 1;
   let projectionNeedsUpdate = true;
 
   const projection = create();
@@ -52,6 +52,7 @@ export const createCamera = effect((context, props = {}) => {
   uniformMap.pixelRatio = pixelRatio;
 
   const block = uniformBlock(context, uniformMap);
+
   const { update } = block;
 
   const updateProjection = () => {
@@ -110,20 +111,22 @@ export const createCamera = effect((context, props = {}) => {
     update("pixelRatio", pixelRatio);
   };
 
-  requestPreRenderJob(updateCamera);
-
-  context.resizeSubscribers.add((x, y, drawingBufferWidth, drawingBufferHeight, ratio) => {
-    width = drawingBufferWidth;
-    height = drawingBufferHeight;
-
-    projectionNeedsUpdate = true;
+  if (!isServer) {
     requestPreRenderJob(updateCamera);
 
-    if (ratio !== pixelRatio) {
-      pixelRatio = ratio;
-      requestPreRenderJob(updateDevicePixelRatio);
-    }
-  });
+    context.resizeSubscribers.add((x, y, drawingBufferWidth, drawingBufferHeight, ratio) => {
+      width = drawingBufferWidth;
+      height = drawingBufferHeight;
+
+      projectionNeedsUpdate = true;
+      requestPreRenderJob(updateCamera);
+
+      if (ratio !== pixelRatio) {
+        pixelRatio = ratio;
+        requestPreRenderJob(updateDevicePixelRatio);
+      }
+    });
+  }
 
   const proxyHandler = {
     set: function (target, prop, newValue) {

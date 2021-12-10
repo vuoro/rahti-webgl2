@@ -9,7 +9,7 @@ export const buffer = effect(
     usage = "STATIC_DRAW",
     types = dataToTypes(data[0])
   ) => {
-    if (isServer) return;
+    if (isServer) return {};
     const BINDING = gl[binding];
 
     const [bufferType, shaderType] = types;
