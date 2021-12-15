@@ -122,6 +122,7 @@ ${fragment}`;
 
     // VAO for elements and attributes
     const vao = gl.createVertexArray();
+    setBuffer();
     setVao(vao);
 
     // Elements
