@@ -11,10 +11,11 @@ export const instances = effect((context, attributeMap) => {
   for (const key in attributeMap) {
     const value = attributeMap[key];
 
-    const bufferObject = buffer(context, [value], undefined, "DYNAMIC_DRAW");
+    const data = [value];
+    const bufferObject = buffer(context, data, undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
-    bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor.of(value);
+    bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
 
     attributes.set(key, bufferObject);
   }
