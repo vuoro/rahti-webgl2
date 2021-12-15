@@ -18,7 +18,7 @@ export const createCamera = effect((context, props = {}) => {
 
   const position = Float32Array.from(props.position || [0, 0, 2]);
   const target = Float32Array.from(props.target || [0, 0, 0]);
-  const up = Float32Array.from(props.up || [0, 1, 0]);
+  const up = Float32Array.from(props.up || [0, 0, 1]);
 
   const direction = Float32Array.from([0, 0, -1]);
 
