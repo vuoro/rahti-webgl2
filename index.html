@@ -16,7 +16,7 @@
     <canvas id="canvas"></canvas>
 
     <script type="module">
-      import { effect, state } from "@vuoro/rahti";
+      import { effect, state, key } from "@vuoro/rahti";
       import {
         context,
         uniformBlock,
@@ -117,7 +117,7 @@
         });
 
         for (let index = 1; index < 13; index++) {
-          quad(index, quadInstance);
+          quad(key(index), index, quadInstance);
         }
 
         document.addEventListener("pointermove", ({ x, y }) => {
@@ -139,7 +139,7 @@
 
         setTimeout(increment, Math.random() * 3000);
 
-        quadInstance(index, {
+        quadInstance({
           color: [Math.random(), Math.random(), Math.random()],
           offset: Float32Array.of(-index * 0.1, -index * 0.1),
         });
