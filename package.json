@@ -1,6 +1,6 @@
 {
   "name": "@vuoro/rahti-webgl2",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "WebGL2 effects for Rahti",
   "main": "main.js",
   "type": "module",
@@ -50,7 +50,7 @@
     }
   },
   "dependencies": {
-    "@vuoro/rahti": "^0.1.13",
+    "@vuoro/rahti": "^1.0.0",
     "gl-mat4-esm": "^1.1.4"
   }
 }
