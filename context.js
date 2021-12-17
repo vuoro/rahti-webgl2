@@ -6,7 +6,7 @@ const defaultAttributes = {
 };
 
 const defaultOptions = {
-  clearColor: [1, 1, 1, 1],
+  clearColor: [0, 0, 0, 1],
   pixelRatio: 1,
 };
 
