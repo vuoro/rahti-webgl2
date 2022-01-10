@@ -247,7 +247,7 @@ ${fragment}`;
       setVao(vao);
       setDepth(overrideDepth);
       setCull(overrideCull);
-      setBlend(overrideBlend);
+      if (overrideBlend) setBlend(...overrideBlend);
       executeRender(gl[overrideMode], overrideCount, overrideInstanceCount);
       setVao();
     };
