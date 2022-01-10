@@ -32,6 +32,7 @@ export const context = effect((canvas, inputAttributes, options) => {
   let currentFramebuffer = null;
   let currentDepth = null;
   let currentCull = null;
+  let currentBlend = null;
 
   const setProgram = (program) => {
     if (currentProgram !== program) {
@@ -71,6 +72,18 @@ export const context = effect((canvas, inputAttributes, options) => {
         gl.disable(gl.CULL_FACE);
       }
       currentCull = cull;
+    }
+  };
+
+  const setBlend = (sourceFactor, destinationFactor) => {
+    if (currentBlend !== sourceFactor + destinationFactor) {
+      if (sourceFactor && destinationFactor) {
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl[sourceFactor], gl[destinationFactor]);
+      } else {
+        gl.disable(gl.BLEND);
+      }
+      currentBlend = sourceFactor + destinationFactor;
     }
   };
 
@@ -187,6 +200,7 @@ export const context = effect((canvas, inputAttributes, options) => {
     setBuffer,
     setDepth,
     setCull,
+    setBlend,
     setTexture,
     textureIndexes,
     setFramebuffer,

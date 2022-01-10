@@ -4,7 +4,7 @@ const blank = {};
 
 export const command = effect(
   (
-    { gl, setBuffer, setProgram, setVao, setDepth, setCull },
+    { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend },
     {
       // Static
       attributes = blank,
@@ -30,6 +30,7 @@ export const command = effect(
       mode = "TRIANGLES",
       depth = "LESS",
       cull = "BACK",
+      blend = null,
 
       // Runtime-only overrides
       // count: overrideCount,
@@ -236,6 +237,7 @@ ${fragment}`;
       overrideMode = mode,
       overrideDepth = depth,
       overrideCull = cull,
+      overrideBlend = blend,
       overrideCount = usesElements ? elements.count : count,
       overrideInstanceCount = isInstanced && instanceSet.size
     ) => {
@@ -245,6 +247,7 @@ ${fragment}`;
       setVao(vao);
       setDepth(overrideDepth);
       setCull(overrideCull);
+      setBlend(overrideBlend);
       executeRender(gl[overrideMode], overrideCount, overrideInstanceCount);
       setVao();
     };
