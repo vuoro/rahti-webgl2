@@ -49,8 +49,16 @@ export const cancelJobsAndStopFrame = () => {
 };
 
 const animationFrame = (timestamp) => {
-  for (const [nthFrame, set] of animationFrameSets) {
+  let shouldRunAllFrames = false;
+  for (const [nthFrame] of animationFrameSets) {
     if (frameNumber % nthFrame === 0) {
+      shouldRunAllFrames = true;
+      break;
+    }
+  }
+
+  if (shouldRunAllFrames) {
+    for (const [, set] of animationFrameSets) {
       for (const subscriber of set) {
         subscriber(timestamp, frameNumber);
       }
