@@ -1,10 +1,5 @@
 import { isServer } from "@vuoro/rahti";
 
-const defaultParameters = {
-  TEXTURE_MAG_FILTER: "NEAREST",
-  TEXTURE_MIN_FILTER: "NEAREST",
-};
-
 export const texture = (
   { gl, setTexture, requestRendering, textureIndexes },
   {
@@ -14,14 +9,14 @@ export const texture = (
     updater = "texSubImage2D",
     level = 0,
     format = "RGBA",
-    internalFormat = "RGBA32F",
-    type = "FLOAT",
+    internalFormat = "RGBA",
+    type = "UNSIGNED_BYTE",
     border = 0,
     offset,
     pixels = null,
     width = 64,
     height = 64,
-    parameters = defaultParameters,
+    parameters,
   } = {}
 ) => {
   if (isServer) return {};
@@ -36,8 +31,10 @@ export const texture = (
 
   let allData = pixels || null;
 
-  for (const key in parameters) {
-    gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
+  if (parameters) {
+    for (const key in parameters) {
+      gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
+    }
   }
 
   const set = (data, offset) => {
