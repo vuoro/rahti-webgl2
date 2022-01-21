@@ -43,8 +43,9 @@
         ]);
         const shared = uniformBlock(thisContext, { time: 0, lightColor: [0, 0, 0] });
         const smallTexture = texture(thisContext, {
-          pixels: new Float32Array(64 * 64 * 4).fill(0.2),
+          pixels: new Uint8Array(64 * 64 * 4).fill(128),
         });
+
         const [cameraController, camera] = createCamera(thisContext);
 
         const triangleElements = elements(thisContext, Int16Array.of(0, 1, 2));
@@ -57,15 +58,18 @@
           textures: { smallTexture },
           // elements: triangleElements,
           vertex: `
+            out vec2 textureCoordinates;
             void main () {
+              textureCoordinates = shape;
               gl_Position = vec4(shape, 0.0, 1.0);
             }
           `,
           fragment: `
+            in vec2 textureCoordinates;
             out vec4 fragment;
 
             void main () {
-              fragment = vec4(texture(smallTexture, vec2(1)).xyz, 1.0);
+              fragment = vec4(texture(smallTexture, textureCoordinates).rgb, 1.0);
             }
           `,
         });
@@ -80,7 +84,7 @@
 
             void main () {
               colorOut = color;
-              gl_Position = projectionView * vec4(shape + offset, 0.0, 1.0);
+              gl_Position = projectionView * vec4(shape + offset, -offset.x, 1.0);
             }
           `,
           fragment: `

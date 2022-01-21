@@ -1,4 +1,16 @@
 import { isServer } from "@vuoro/rahti";
+import { requestPreRenderJob } from "./animation-frame.js";
+
+const defaultParameters = {
+  TEXTURE_MIN_FILTER: "LINEAR",
+  TEXTURE_MAG_FILTER: "LINEAR",
+  TEXTURE_WRAP_S: "REPEAT",
+  TEXTURE_WRAP_T: "REPEAT",
+};
+const defaultMipParameters = {
+  ...defaultParameters,
+  TEXTURE_MIN_FILTER: "NEAREST_MIPMAP_LINEAR",
+};
 
 export const texture = (
   { gl, setTexture, requestRendering, textureIndexes },
@@ -16,7 +28,11 @@ export const texture = (
     pixels = null,
     width = 64,
     height = 64,
-    parameters,
+    mipmaps = false,
+    flipY = false,
+    premultiplyAlpha = false,
+    unpackAlignment,
+    parameters = mipmaps ? defaultMipParameters : defaultParameters,
   } = {}
 ) => {
   if (isServer) return {};
@@ -36,6 +52,16 @@ export const texture = (
       gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
     }
   }
+
+  if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+  if (premultiplyAlpha) gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha);
+  if (unpackAlignment !== undefined) gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+  if (typeof mipmaps === "string") gl.hint(gl.GENERATE_MIPMAP_HINT, gl[mipmaps]);
+
+  const generateMipmaps = () => {
+    setTexture(texture, TARGET);
+    gl.generateMipmap(TARGET);
+  };
 
   const set = (data, offset) => {
     allData = data;
@@ -58,6 +84,7 @@ export const texture = (
       gl[setter](TARGET, level, INTERNAL_FORMAT, width, height, border, FORMAT, TYPE, allData);
     }
 
+    requestPreRenderJob(generateMipmaps);
     requestRendering();
   };
 
@@ -66,6 +93,7 @@ export const texture = (
   const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset) => {
     setTexture(texture, TARGET);
     gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
+    requestPreRenderJob(generateMipmaps);
   };
 
   return { shaderType, set, update, index: textureIndexes.get(texture) };
