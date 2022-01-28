@@ -102,9 +102,9 @@ export const createCamera = effect((context, props = {}) => {
   };
 
   const updateCamera = () => {
-    if (projectionNeedsUpdate) requestPreRenderJob(updateProjection);
-    requestPreRenderJob(updateView);
-    requestPreRenderJob(updateCombined);
+    if (projectionNeedsUpdate) updateProjection();
+    updateView();
+    updateCombined();
   };
 
   const updateDevicePixelRatio = () => {
