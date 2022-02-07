@@ -56,7 +56,9 @@ export const texture = (
   if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
   if (premultiplyAlpha) gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha);
   if (unpackAlignment !== undefined) gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
-  if (typeof mipmaps === "string") gl.hint(gl.GENERATE_MIPMAP_HINT, gl[mipmaps]);
+
+  const hasMipmaps = typeof mipmaps === "string";
+  if (hasMipmaps) gl.hint(gl.GENERATE_MIPMAP_HINT, gl[mipmaps]);
 
   const generateMipmaps = () => {
     setTexture(texture, TARGET);
@@ -84,7 +86,7 @@ export const texture = (
       gl[setter](TARGET, level, INTERNAL_FORMAT, width, height, border, FORMAT, TYPE, allData);
     }
 
-    requestPreRenderJob(generateMipmaps);
+    if (hasMipmaps) requestPreRenderJob(generateMipmaps);
     requestRendering();
   };
 
@@ -93,7 +95,7 @@ export const texture = (
   const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset) => {
     setTexture(texture, TARGET);
     gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
-    requestPreRenderJob(generateMipmaps);
+    if (hasMipmaps) requestPreRenderJob(generateMipmaps);
   };
 
   return { shaderType, set, update, index: textureIndexes.get(texture) };
