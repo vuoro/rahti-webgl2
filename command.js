@@ -105,17 +105,17 @@ ${fragment}`;
     gl.compileShader(vertexShader);
     gl.compileShader(fragmentShader);
 
-    const vertexLog = gl.getShaderInfoLog(vertexShader);
-    const fragmentLog = gl.getShaderInfoLog(fragmentShader);
-    if (vertexLog) logError(vertexLog, finalVertex);
-    if (fragmentLog) logError(fragmentLog, finalFragment);
-
     // Compile program and log errors
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
+
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const vertexLog = gl.getShaderInfoLog(vertexShader);
+      const fragmentLog = gl.getShaderInfoLog(fragmentShader);
+      if (vertexLog) logError(vertexLog, finalVertex);
+      if (fragmentLog) logError(fragmentLog, finalFragment);
       throw new Error(gl.getProgramInfoLog(program));
     }
 
