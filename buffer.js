@@ -3,7 +3,7 @@ import { cancelPreRenderJob, preRenderJobs, requestPreRenderJob } from "./animat
 
 export const buffer = effect(
   (
-    { gl, setBuffer },
+    { gl, setBuffer, requestRendering },
     data,
     binding = "ARRAY_BUFFER",
     usage = "STATIC_DRAW",
@@ -67,6 +67,8 @@ export const buffer = effect(
         firstDirty = Infinity;
         lastDirty = 0;
       }
+
+      requestRendering();
     };
 
     requestPreRenderJob(set);
@@ -98,6 +100,8 @@ export const buffer = effect(
 
       firstDirty = Infinity;
       lastDirty = 0;
+
+      requestRendering();
     };
 
     onCleanup(() => {

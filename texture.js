@@ -96,6 +96,7 @@ export const texture = (
     setTexture(texture, TARGET);
     gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
     if (hasMipmaps) requestPreRenderJob(generateMipmaps);
+    requestRendering();
   };
 
   return { shaderType, set, update, index: textureIndexes.get(texture) };
