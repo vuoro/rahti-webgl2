@@ -3,6 +3,7 @@ import { isServer } from "@vuoro/rahti";
 const animationFrameSets = new Map();
 export const preRenderJobs = new Set();
 export const renderJobs = new Set();
+export const postRenderJobs = new Set();
 let frameNumber = 0;
 let totalSubscribers = 0;
 let frame = null;
@@ -31,6 +32,11 @@ export const requestPreRenderJob = (job) => {
 };
 export const requestRenderJob = (job) => {
   renderJobs.add(job);
+  if (isServer) return;
+  frame = frame || requestAnimationFrame(animationFrame);
+};
+export const requestPostRenderJob = (job) => {
+  postRenderJobs.add(job);
   if (isServer) return;
   frame = frame || requestAnimationFrame(animationFrame);
 };
@@ -66,14 +72,19 @@ const animationFrame = (timestamp) => {
   }
 
   for (const job of preRenderJobs) {
-    job();
+    job(timestamp, frameNumber);
   }
   preRenderJobs.clear();
 
   for (const job of renderJobs) {
-    job();
+    job(timestamp, frameNumber);
   }
   renderJobs.clear();
+
+  for (const job of postRenderJobs) {
+    job(timestamp, frameNumber);
+  }
+  postRenderJobs.clear();
 
   frameNumber++;
 
