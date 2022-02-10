@@ -104,6 +104,8 @@ export const uniformBlock = effect((context, uniformMap) => {
 
     firstDirty = Infinity;
     lastDirty = 0;
+
+    requestRendering();
   };
 
   onCleanup(() => {

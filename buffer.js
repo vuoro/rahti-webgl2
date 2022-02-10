@@ -100,6 +100,8 @@ export const buffer = effect(
 
       firstDirty = Infinity;
       lastDirty = 0;
+
+      requestRendering();
     };
 
     onCleanup(() => {
