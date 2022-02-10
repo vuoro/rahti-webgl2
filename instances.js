@@ -4,7 +4,6 @@ import { buffer } from "./buffer.js";
 
 export const instances = effect((context, attributeMap) => {
   if (isServer) return () => {};
-  const { requestRendering } = context;
 
   const attributes = new Map();
 
@@ -20,33 +19,87 @@ export const instances = effect((context, attributeMap) => {
     attributes.set(key, bufferObject);
   }
 
-  const instances = new Set();
-  const instanceOffsets = new Map();
+  const additions = new Set();
+  const deletions = new Set();
+  const instances = new Map();
+  const slots = new Map();
+  const freeSlots = [];
+  const changes = new Map();
+  const orphans = new Set();
 
   const buildInstances = () => {
-    instanceOffsets.clear();
-    let isFirstAttribute = true;
+    const oldSize = instances.size;
+    const newSize = oldSize + additions.size - deletions.size;
 
-    for (const [key, { set, Constructor, dimensions }] of attributes) {
-      const batch = new Constructor(dimensions * instances.size);
+    // Mark deletions as free slots
+    for (const instance of deletions) {
+      const slot = instances.get(instance);
+      instances.delete(instance);
+      slots.delete(slot);
 
-      for (const instance of instances) {
-        if (isFirstAttribute) {
-          instanceOffsets.set(instance, instanceOffsets.size);
-        }
+      if (slot < newSize) {
+        freeSlots.push(slot);
+      }
+    }
 
+    // Mark orphans
+    for (let slot = newSize; slot < oldSize; slot++) {
+      const instance = slots.get(slot);
+
+      if (instance) {
+        instances.delete(instance);
+        slots.delete(slot);
+        orphans.add(instance);
+      }
+    }
+
+    // Add new instances
+    for (const instance of additions) {
+      const slot = freeSlots.length ? freeSlots.pop() : instances.size;
+      instances.set(instance, slot);
+      slots.set(slot, instance);
+      changes.set(instance, slot);
+    }
+
+    // Move orphans into remaining slots
+    for (const instance of orphans) {
+      const slot = freeSlots.pop();
+      instances.set(instance, slot);
+      slots.set(slot, instance);
+      changes.set(instance, slot);
+    }
+
+    // Create new typedarrays
+    for (const [key, { allData, Constructor, dimensions, set }] of attributes) {
+      let newData;
+
+      if (newSize <= oldSize) {
+        // slice old array
+        newData = allData.subarray(0, newSize * dimensions);
+      } else {
+        // create new array
+        newData = new Constructor(newSize * dimensions);
+        newData.set(allData);
+      }
+
+      // And fill in the changes
+      for (const [instance, slot] of changes) {
         const value = instance.get(key);
 
         if (dimensions === 1) {
-          batch[instanceOffsets.get(instance) * dimensions] = value;
+          newData[slot] = value;
         } else {
-          batch.set(value, instanceOffsets.get(instance) * dimensions);
+          newData.set(value, slot * dimensions);
         }
       }
 
-      set(batch);
-      isFirstAttribute = false;
+      set(newData);
     }
+
+    deletions.clear();
+    additions.clear();
+    orphans.clear();
+    changes.clear();
   };
 
   const instanceCreator = effect(() => {
@@ -56,14 +109,16 @@ export const instances = effect((context, attributeMap) => {
       instance.set(key, defaultValue);
     }
 
-    instances.add(instance);
+    additions.add(instance);
     requestPreRenderJob(buildInstances);
-    requestRendering();
 
     onCleanup(() => {
-      instances.delete(instance);
-      requestPreRenderJob(buildInstances);
-      requestRendering();
+      if (additions.has(instance)) {
+        additions.delete(instance);
+      } else {
+        deletions.add(instance);
+        requestPreRenderJob(buildInstances);
+      }
     });
 
     return instance;
@@ -73,20 +128,22 @@ export const instances = effect((context, attributeMap) => {
     (key, value, instance) => {
       instance.set(key, value);
       const { dimensions, defaultValue, update } = attributes.get(key);
-      const offset = instanceOffsets.get(instance);
+      const slot = instances.get(instance);
 
-      if (offset !== undefined) {
-        update(value, offset * dimensions);
-        requestRendering();
-
-        onCleanup((isFinal) => {
-          if (isFinal) {
-            instance.set(key, defaultValue);
-            update(defaultValue, offset * dimensions);
-            requestRendering();
-          }
-        });
+      if (slot !== undefined) {
+        update(value, slot * dimensions);
       }
+
+      onCleanup((isFinal) => {
+        if (isFinal) {
+          instance.set(key, defaultValue);
+          const slot = instances.get(instance);
+
+          if (slot !== undefined) {
+            update(defaultValue, slot * dimensions);
+          }
+        }
+      });
     },
     {
       areSame: (a, b) => {
@@ -123,8 +180,8 @@ export const instances = effect((context, attributeMap) => {
 
   onCleanup(() => {
     attributes.clear();
-    instances.clear();
-    instanceOffsets.clear();
+    additions.clear();
+    deletions.clear();
   });
 
   instanceEffect.attributes = attributes;

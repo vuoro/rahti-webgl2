@@ -46,7 +46,7 @@ export const command = effect(
     if (attributes === blank) throw new Error("missing at least one attribute");
 
     const isInstanced = !!instances;
-    const instanceSet = instances?.instances;
+    const instanceList = instances?.instances;
     const usesElements = !!elements;
     const UNSIGNED_SHORT = gl.UNSIGNED_SHORT;
 
@@ -239,7 +239,7 @@ ${fragment}`;
       overrideCull = cull,
       overrideBlend = blend,
       overrideCount = usesElements ? elements.count : count,
-      overrideInstanceCount = isInstanced && instanceSet.size
+      overrideInstanceCount = isInstanced && instanceList.size
     ) => {
       if (isInstanced && !overrideInstanceCount) return;
 

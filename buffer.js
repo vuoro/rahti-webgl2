@@ -38,6 +38,7 @@ export const buffer = effect(
     const countSubscribers = new Set();
 
     const bufferObject = {
+      allData,
       buffer,
       bufferType,
       shaderType,
@@ -52,6 +53,7 @@ export const buffer = effect(
 
     const set = (data = allData) => {
       allData = data;
+      bufferObject.allData = allData;
       bufferObject.count = data.length / dimensions;
       setBuffer(buffer, BINDING);
       gl.bufferData(BINDING, data, USAGE);
