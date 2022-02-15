@@ -1,10 +1,8 @@
-import { effect, isServer, onCleanup } from "@vuoro/rahti";
+import { cleanup } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 import { dataToTypes } from "./buffer.js";
 
-export const uniformBlock = effect((context, uniformMap) => {
-  if (isServer) return {};
-
+export const uniformBlock = function (context, uniformMap) {
   const { gl, setBuffer, requestRendering } = context;
 
   const offsets = new Map();
@@ -108,9 +106,9 @@ export const uniformBlock = effect((context, uniformMap) => {
     requestRendering();
   };
 
-  onCleanup(() => {
+  cleanup(this).then(() => {
     cancelPreRenderJob(commitUpdate);
   });
 
   return { uniforms, update, bindIndex };
-});
+};

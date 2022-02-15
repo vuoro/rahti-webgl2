@@ -1,4 +1,4 @@
-import { isServer, effect, state, onCleanup } from "@vuoro/rahti";
+import { state, cleanup, update } from "@vuoro/rahti";
 import { cancelJobsAndStopFrame, requestRenderJob } from "./animation-frame.js";
 
 const defaultAttributes = {
@@ -10,16 +10,12 @@ const defaultOptions = {
   pixelRatio: 1,
 };
 
-const contextCounter = state(0, undefined, false);
-
-export const context = effect((canvas, inputAttributes, options) => {
-  if (isServer) return {};
+export const context = function (canvas, inputAttributes, options) {
   if (!canvas || !(canvas instanceof Node)) throw new Error("Missing canvas");
 
   const attributes = { ...defaultAttributes, ...inputAttributes };
   const { clearColor, pixelRatio } = { ...defaultOptions, ...options };
 
-  const [, reset] = contextCounter();
   const gl = canvas.getContext("webgl2", attributes);
   const textureIndexes = new Map();
   const resizeSubscribers = new Set();
@@ -165,15 +161,16 @@ export const context = effect((canvas, inputAttributes, options) => {
     event.preventDefault();
     cancelJobsAndStopFrame();
   };
+  const component = this;
   const handleRestored = () => {
     console.log("restoring context");
-    reset();
+    update(component);
   };
 
   canvas.addEventListener("webglcontextlost", handleLost);
   canvas.addEventListener("webglcontextrestored", handleRestored);
 
-  onCleanup(() => {
+  cleanup(this).then(() => {
     cancelJobsAndStopFrame();
     observer.disconnect();
     canvas.removeEventListener("webglcontextlost", handleLost);
@@ -211,4 +208,4 @@ export const context = effect((canvas, inputAttributes, options) => {
     frame,
     requestRendering,
   };
-});
+};

@@ -16,7 +16,7 @@
     <canvas id="canvas"></canvas>
 
     <script type="module">
-      import { effect, state, key } from "@vuoro/rahti";
+      import { root, state } from "@vuoro/rahti";
       import {
         context,
         uniformBlock,
@@ -32,28 +32,28 @@
       // and for commands?
       // write each piece of the API
 
-      const graphics = effect(() => {
-        const thisContext = context(document.getElementById("canvas"));
+      const graphics = function () {
+        const thisContext = this(context)(document.getElementById("canvas"));
 
-        const shape = attribute(thisContext, [
+        const shape = this(attribute)(thisContext, [
           Float32Array.of(0, 0),
           Float32Array.of(1, 0),
           Float32Array.of(1, 1),
           Float32Array.of(0, 1),
         ]);
-        const shared = uniformBlock(thisContext, { time: 0, lightColor: [0, 0, 0] });
-        const smallTexture = texture(thisContext, {
+        const shared = this(uniformBlock)(thisContext, { time: 0, lightColor: [0, 0, 0] });
+        const smallTexture = this(texture)(thisContext, {
           pixels: new Uint8Array(64 * 64 * 4).fill(128),
         });
 
-        const [cameraController, camera] = createCamera(thisContext);
+        const [cameraController, camera] = this(createCamera)(thisContext);
 
-        const triangleElements = elements(thisContext, Int16Array.of(0, 1, 2));
-        const quadElements = elements(thisContext, Int16Array.of(0, 1, 2, 2, 3, 0));
+        const triangleElements = this(elements)(thisContext, Int16Array.of(0, 1, 2));
+        const quadElements = this(elements)(thisContext, Int16Array.of(0, 1, 2, 2, 3, 0));
 
-        const quadInstance = instances(thisContext, { color: [0, 0, 0], offset: [0, 0] });
+        const quadInstance = this(instances)(thisContext, { color: [1, 1, 1], offset: [0, 0] });
 
-        const drawTriangle = command(thisContext, {
+        const drawTriangle = this(command)(thisContext, {
           attributes: { shape },
           textures: { smallTexture },
           // elements: triangleElements,
@@ -74,7 +74,7 @@
           `,
         });
 
-        const drawQuad = command(thisContext, {
+        const drawQuad = this(command)(thisContext, {
           attributes: { shape },
           uniformBlocks: { camera },
           elements: quadElements,
@@ -107,10 +107,11 @@
           shared,
           cameraController,
         };
-      });
+      };
 
-      const app = effect(() => {
-        const { frame, commands, resources, quadInstance, shared, cameraController } = graphics();
+      const app = function () {
+        const { frame, commands, resources, quadInstance, shared, cameraController } =
+          this(graphics)();
         const { clear, drawTriangle, drawQuad } = commands;
 
         frame(() => {
@@ -120,43 +121,41 @@
           drawQuad();
         });
 
-        const [, { increment }] = counter();
+        const [, { increment }] = this(state)(0, getActions);
         setTimeout(increment, Math.random() * 1000);
 
-        const max = 100 * Math.random();
+        const max = 10 * Math.random();
         for (let index = 1; index < max; index++) {
-          quad(key(index), index, quadInstance);
+          this(quad, index)(index, quadInstance);
         }
 
         document.addEventListener("pointermove", ({ x, y }) => {
           cameraController.target[0] = -x * 0.001;
           cameraController.target[1] = y * 0.001;
         });
+      };
+
+      const getActions = (get, set) => ({
+        increment: () => {
+          set(get() + 1);
+        },
       });
 
-      const counter = state(0, {
-        getActions: (get, set) => ({
-          increment: () => {
-            set(get() + 1);
-          },
-        }),
-      });
-
-      const quad = effect((index, quadInstance) => {
-        const [, { increment }] = counter();
+      const quad = function (index, quadInstance) {
+        const [, { increment }] = this(state)(0, getActions);
         setTimeout(increment, Math.random() * 1000);
 
-        // if (Math.random() > 0.75) {
-        quadInstance(
-          /*key(Math.round(Math.random())), */ {
-            color: [Math.random(), Math.random(), Math.random()],
+        if (Math.random() > 0.5) {
+          const attributes = {
             offset: Float32Array.of(-index * 0.1, -index * 0.1),
-          }
-        );
-        // }
-      });
+          };
 
-      app();
+          if (Math.random() > 0.5) attributes.color = [Math.random(), Math.random(), Math.random()];
+          this(quadInstance)(attributes);
+        }
+      };
+
+      root(app)();
     </script>
   </body>
 </html>

@@ -1,4 +1,3 @@
-import { isServer } from "@vuoro/rahti";
 import { requestPreRenderJob } from "./animation-frame.js";
 
 const defaultParameters = {
@@ -12,7 +11,7 @@ const defaultMipParameters = {
   TEXTURE_MIN_FILTER: "NEAREST_MIPMAP_LINEAR",
 };
 
-export const texture = (
+export const texture = function (
   { gl, setTexture, requestRendering, textureIndexes },
   {
     shaderType = "sampler2D",
@@ -34,9 +33,7 @@ export const texture = (
     unpackAlignment,
     parameters = mipmaps ? defaultMipParameters : defaultParameters,
   } = {}
-) => {
-  if (isServer) return {};
-
+) {
   const TARGET = gl[target];
   const FORMAT = gl[format];
   const INTERNAL_FORMAT = gl[internalFormat];

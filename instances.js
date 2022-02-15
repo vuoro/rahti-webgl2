@@ -1,17 +1,15 @@
-import { effect, isServer, onCleanup } from "@vuoro/rahti";
+import { cleanup } from "@vuoro/rahti";
 import { requestPreRenderJob } from "./animation-frame.js";
 import { buffer } from "./buffer.js";
 
-export const instances = effect((context, attributeMap) => {
-  if (isServer) return () => {};
-
+export const instances = function (context, attributeMap) {
   const attributes = new Map();
 
   for (const key in attributeMap) {
     const value = attributeMap[key];
 
     const data = [value];
-    const bufferObject = buffer(context, data, undefined, "DYNAMIC_DRAW");
+    const bufferObject = this(buffer)(context, data, undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
     bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
@@ -102,7 +100,26 @@ export const instances = effect((context, attributeMap) => {
     changes.clear();
   };
 
-  const instanceCreator = effect(() => {
+  const instanceEffect = function (newAttributes) {
+    const instance = this(instanceCreator)();
+
+    if (newAttributes) {
+      for (const key in newAttributes) {
+        const value = newAttributes[key];
+        instance.set(key, value);
+
+        const slot = instances.get(instance);
+        if (slot !== undefined) {
+          const { dimensions, update } = attributes.get(key);
+          update(value, slot * dimensions);
+        }
+
+        this(instanceAttributeResetter, key)(key, instance);
+      }
+    }
+  };
+
+  const instanceCreator = function () {
     const instance = new Map();
 
     for (const [key, { defaultValue }] of attributes) {
@@ -112,73 +129,30 @@ export const instances = effect((context, attributeMap) => {
     additions.add(instance);
     requestPreRenderJob(buildInstances);
 
-    onCleanup(() => {
-      if (additions.has(instance)) {
-        additions.delete(instance);
-      } else {
-        deletions.add(instance);
-        requestPreRenderJob(buildInstances);
-      }
+    cleanup(this).then(() => {
+      additions.delete(instance);
+      deletions.add(instance);
+      requestPreRenderJob(buildInstances);
     });
 
     return instance;
-  });
+  };
 
-  const instanceAttribute = effect(
-    (key, value, instance) => {
-      instance.set(key, value);
-      const { dimensions, defaultValue, update } = attributes.get(key);
-      const slot = instances.get(instance);
+  const instanceAttributeResetter = function (key, instance) {
+    cleanup(this).then((isFinal) => {
+      if (isFinal) {
+        const { dimensions, defaultValue, update } = attributes.get(key);
+        instance.set(key, defaultValue);
+        const slot = instances.get(instance);
 
-      if (slot !== undefined) {
-        update(value, slot * dimensions);
-      }
-
-      onCleanup((isFinal) => {
-        if (isFinal) {
-          instance.set(key, defaultValue);
-          const slot = instances.get(instance);
-
-          if (slot !== undefined) {
-            update(defaultValue, slot * dimensions);
-          }
+        if (slot !== undefined) {
+          update(defaultValue, slot * dimensions);
         }
-      });
-    },
-    {
-      areSame: (a, b) => {
-        if (typeof a !== typeof b) return false;
-
-        if (typeof a === "object") {
-          // Shallow-compare attributes
-          for (const key in a) {
-            if (!(key in b) || a[key] !== b[key]) {
-              return false;
-            }
-          }
-          for (const key in b) {
-            if (!(key in a) || a[key] !== b[key]) {
-              return false;
-            }
-          }
-          return true;
-        }
-
-        return a === b;
-      },
-    }
-  );
-
-  const instanceEffect = effect((newAttributes) => {
-    const instance = instanceCreator();
-    if (newAttributes) {
-      for (const [key] of attributes) {
-        if (key in newAttributes) instanceAttribute(key, newAttributes[key], instance);
       }
-    }
-  });
+    });
+  };
 
-  onCleanup(() => {
+  cleanup(this).then(() => {
     attributes.clear();
     additions.clear();
     deletions.clear();
@@ -188,4 +162,4 @@ export const instances = effect((context, attributeMap) => {
   instanceEffect.instances = instances;
 
   return instanceEffect;
-});
+};

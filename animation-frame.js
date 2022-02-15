@@ -1,5 +1,3 @@
-import { isServer } from "@vuoro/rahti";
-
 const animationFrameSets = new Map();
 export const preRenderJobs = new Set();
 export const renderJobs = new Set();
@@ -9,7 +7,6 @@ let totalSubscribers = 0;
 let frame = null;
 
 export const subscribeToAnimationFrame = (callback, nthFrame) => {
-  if (isServer) return;
   if (!animationFrameSets.has(nthFrame)) {
     animationFrameSets.set(nthFrame, new Set());
   }
@@ -27,17 +24,14 @@ export const unsubscribeFromAnimationFrame = (callback, nthFrame) => () => {
 
 export const requestPreRenderJob = (job) => {
   preRenderJobs.add(job);
-  if (isServer) return;
   frame = frame || requestAnimationFrame(animationFrame);
 };
 export const requestRenderJob = (job) => {
   renderJobs.add(job);
-  if (isServer) return;
   frame = frame || requestAnimationFrame(animationFrame);
 };
 export const requestPostRenderJob = (job) => {
   postRenderJobs.add(job);
-  if (isServer) return;
   frame = frame || requestAnimationFrame(animationFrame);
 };
 

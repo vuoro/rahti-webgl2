@@ -1,14 +1,13 @@
 import { create, perspective, ortho, lookAt, multiply, invert } from "gl-mat4-esm";
-import { effect, isServer } from "@vuoro/rahti";
 import { uniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
 
-export const createCamera = effect((context, props = {}) => {
+export const createCamera = function (context, props = {}) {
   let { fov = 60, near = 0.1, far = 1000, zoom = 1 } = props;
 
   let width = context?.gl?.drawingBufferWidth || 1;
   let height = context?.gl?.drawingBufferHeight || 1;
-  let pixelRatio = isServer ? 1 : window.devicePixelRatio || 1;
+  let pixelRatio = window.devicePixelRatio;
   let projectionNeedsUpdate = true;
 
   const projection = create();
@@ -51,7 +50,7 @@ export const createCamera = effect((context, props = {}) => {
   // uniformMap.cameraFov = fov;
   uniformMap.pixelRatio = pixelRatio;
 
-  const block = uniformBlock(context, uniformMap);
+  const block = this(uniformBlock)(context, uniformMap);
 
   const { update } = block;
 
@@ -111,22 +110,20 @@ export const createCamera = effect((context, props = {}) => {
     update("pixelRatio", pixelRatio);
   };
 
-  if (!isServer) {
+  requestPreRenderJob(updateCamera);
+
+  context.resizeSubscribers.add((x, y, drawingBufferWidth, drawingBufferHeight, ratio) => {
+    width = drawingBufferWidth;
+    height = drawingBufferHeight;
+
+    projectionNeedsUpdate = true;
     requestPreRenderJob(updateCamera);
 
-    context.resizeSubscribers.add((x, y, drawingBufferWidth, drawingBufferHeight, ratio) => {
-      width = drawingBufferWidth;
-      height = drawingBufferHeight;
-
-      projectionNeedsUpdate = true;
-      requestPreRenderJob(updateCamera);
-
-      if (ratio !== pixelRatio) {
-        pixelRatio = ratio;
-        requestPreRenderJob(updateDevicePixelRatio);
-      }
-    });
-  }
+    if (ratio !== pixelRatio) {
+      pixelRatio = ratio;
+      requestPreRenderJob(updateDevicePixelRatio);
+    }
+  });
 
   const proxyHandler = {
     set: function (target, prop, newValue) {
@@ -182,4 +179,4 @@ export const createCamera = effect((context, props = {}) => {
   };
 
   return [camera, block];
-});
+};
