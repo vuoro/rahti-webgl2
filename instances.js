@@ -130,8 +130,12 @@ export const instances = function (context, attributeMap) {
     requestPreRenderJob(buildInstances);
 
     cleanup(this).then(() => {
-      additions.delete(instance);
-      deletions.add(instance);
+      if (additions.has(instance)) {
+        additions.delete(instance);
+      } else {
+        deletions.add(instance);
+      }
+
       requestPreRenderJob(buildInstances);
     });
 
@@ -145,7 +149,7 @@ export const instances = function (context, attributeMap) {
         instance.set(key, defaultValue);
         const slot = instances.get(instance);
 
-        if (slot !== undefined) {
+        if (slot !== undefined && !deletions.has(instance)) {
           update(defaultValue, slot * dimensions);
         }
       }
