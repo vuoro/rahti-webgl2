@@ -2,7 +2,24 @@ import { create, perspective, ortho, lookAt, multiply, invert } from "gl-mat4-es
 import { uniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
 
-export const createCamera = function (context, props = {}) {
+export const defaultCameraIncludes = new Set([
+  // "projection",
+  // "view",
+  "projectionView",
+  "inverseProjectionView",
+  "cameraPosition",
+  "cameraTarget",
+  "cameraDirection",
+  "cameraDistanceToTarget",
+  // "cameraUp",
+  // "cameraNear",
+  // "cameraFar",
+  // "cameraZoom",
+  // "cameraFov",
+  // "pixelRatio",
+]);
+
+export const createCamera = function (context, props = {}, include = defaultCameraIncludes) {
   let { fov = 60, near = 0.1, far = 1000, zoom = 1 } = props;
 
   let width = context?.gl?.drawingBufferWidth || 1;
@@ -20,39 +37,44 @@ export const createCamera = function (context, props = {}) {
   const up = Float32Array.from(props.up || [0, 0, 1]);
 
   const direction = Float32Array.from([0, 0, -1]);
+  let distance = 1;
 
-  const calculateDirection = () => {
+  const calculateDirectionAndDistance = () => {
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
     direction[2] = target[2] - position[2];
 
     const sum =
       direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2];
-    const magnitude = Math.sqrt(sum);
+    distance = Math.sqrt(sum);
 
-    direction[0] /= magnitude;
-    direction[1] /= magnitude;
-    direction[2] /= magnitude;
+    direction[0] /= distance;
+    direction[1] /= distance;
+    direction[2] /= distance;
   };
 
   const uniformMap = {};
-  uniformMap.projection = projection;
-  uniformMap.view = view;
-  uniformMap.projectionView = projectionView;
-  uniformMap.inverseProjectionView = inverseProjectionView;
-  uniformMap.cameraPosition = position;
-  uniformMap.cameraTarget = target;
-  uniformMap.cameraDirection = direction;
-  // uniformMap.cameraUp = up;
-  uniformMap.cameraNear = near;
-  uniformMap.cameraFar = far;
-  // uniformMap.cameraZoom = zoom;
-  // uniformMap.cameraFov = fov;
-  uniformMap.pixelRatio = pixelRatio;
+  if (include.has("projection")) uniformMap.projection = projection;
+  if (include.has("view")) uniformMap.view = view;
+  if (include.has("projectionView")) uniformMap.projectionView = projectionView;
+  if (include.has("inverseProjectionView"))
+    uniformMap.inverseProjectionView = inverseProjectionView;
+  if (include.has("cameraPosition")) uniformMap.cameraPosition = position;
+  if (include.has("cameraTarget")) uniformMap.cameraTarget = target;
+  if (include.has("cameraDirection")) uniformMap.cameraDirection = direction;
+  if (include.has("cameraDistanceToTarget")) uniformMap.cameraDistanceToTarget = distance;
+  if (include.has("cameraUp")) uniformMap.cameraUp = up;
+  if (include.has("cameraNear")) uniformMap.cameraNear = near;
+  if (include.has("cameraFar")) uniformMap.cameraFar = far;
+  if (include.has("cameraZoom")) uniformMap.cameraZoom = zoom;
+  if (include.has("cameraFov")) uniformMap.cameraFov = fov;
+  if (include.has("pixelRatio")) uniformMap.pixelRatio = pixelRatio;
 
   const block = this(uniformBlock)(context, uniformMap);
 
-  const { update } = block;
+  const update = (key, value) => {
+    if (include.has(key)) block.update(key, value);
+  };
 
   const updateProjection = () => {
     if (fov !== undefined) {
@@ -86,8 +108,9 @@ export const createCamera = function (context, props = {}) {
     update("cameraTarget", target);
     update("cameraUp", up);
 
-    calculateDirection();
+    calculateDirectionAndDistance();
     update("cameraDirection", direction);
+    update("cameraDistanceToTarget", distance);
 
     update("view", view);
   };
