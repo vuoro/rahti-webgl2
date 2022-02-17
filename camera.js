@@ -19,7 +19,7 @@ export const defaultCameraIncludes = new Set([
   // "pixelRatio",
 ]);
 
-export const createCamera = function (context, props = {}, include = defaultCameraIncludes) {
+export const createCamera = async function (context, props = {}, include = defaultCameraIncludes) {
   let { fov = 60, near = 0.1, far = 1000, zoom = 1 } = props;
 
   let width = context?.gl?.drawingBufferWidth || 1;
@@ -70,7 +70,7 @@ export const createCamera = function (context, props = {}, include = defaultCame
   if (include.has("cameraFov")) uniformMap.cameraFov = fov;
   if (include.has("pixelRatio")) uniformMap.pixelRatio = pixelRatio;
 
-  const block = this(uniformBlock)(context, uniformMap);
+  const block = await this(uniformBlock)(context, uniformMap);
 
   const update = (key, value) => {
     if (include.has(key)) block.update(key, value);

@@ -2,14 +2,14 @@ import { cleanup } from "@vuoro/rahti";
 import { requestPreRenderJob } from "./animation-frame.js";
 import { buffer } from "./buffer.js";
 
-export const instances = function (context, attributeMap) {
+export const instances = async function (context, attributeMap) {
   const attributes = new Map();
 
   for (const key in attributeMap) {
     const value = attributeMap[key];
 
     const data = [value];
-    const bufferObject = this(buffer)(context, data, undefined, "DYNAMIC_DRAW");
+    const bufferObject = await this(buffer)(context, data, undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
     bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
@@ -100,8 +100,8 @@ export const instances = function (context, attributeMap) {
     changes.clear();
   };
 
-  const instanceEffect = function (newAttributes) {
-    const instance = this(instanceCreator)();
+  const instanceEffect = async function (newAttributes) {
+    const instance = await this(instanceCreator)();
 
     if (newAttributes) {
       for (const key in newAttributes) {
