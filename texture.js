@@ -16,14 +16,12 @@ export const texture = function (
   {
     shaderType = "sampler2D",
     target = "TEXTURE_2D",
-    setter = "texImage2D",
+    storer = "texStorage2D",
     updater = "texSubImage2D",
-    level = 0,
+    levels = 1,
     format = "RGBA",
-    internalFormat = "RGBA",
+    internalFormat = "RGBA4",
     type = "UNSIGNED_BYTE",
-    border = 0,
-    offset,
     pixels = null,
     width = 64,
     height = 64,
@@ -41,8 +39,6 @@ export const texture = function (
 
   const texture = gl.createTexture();
   setTexture(texture, TARGET);
-
-  let allData = pixels || null;
 
   if (parameters) {
     for (const key in parameters) {
@@ -62,39 +58,15 @@ export const texture = function (
     gl.generateMipmap(TARGET);
   };
 
-  const set = (data, offset) => {
-    allData = data;
-    setTexture(texture, TARGET);
-
-    if (offset !== undefined) {
-      gl[setter](
-        TARGET,
-        level,
-        INTERNAL_FORMAT,
-        width,
-        height,
-        border,
-        FORMAT,
-        TYPE,
-        allData,
-        offset
-      );
-    } else {
-      gl[setter](TARGET, level, INTERNAL_FORMAT, width, height, border, FORMAT, TYPE, allData);
-    }
-
-    if (hasMipmaps) requestPreRenderJob(generateMipmaps);
-    requestRendering();
-  };
-
-  set(allData, offset);
-
-  const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset) => {
+  const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset, level = 0) => {
     setTexture(texture, TARGET);
     gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
     if (hasMipmaps) requestPreRenderJob(generateMipmaps);
     requestRendering();
   };
 
-  return { shaderType, set, update, index: textureIndexes.get(texture) };
+  gl[storer](TARGET, levels, INTERNAL_FORMAT, width, height);
+  if (pixels) update(pixels, 0, 0, width, height);
+
+  return { shaderType, update, index: textureIndexes.get(texture) };
 };

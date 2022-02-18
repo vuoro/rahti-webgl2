@@ -126,7 +126,7 @@
         });
 
         const [, { increment }] = await this(state)(0, getActions);
-        setTimeout(increment, Math.random() * 20);
+        setTimeout(increment, Math.random() * 2000);
 
         const max = 5000 * Math.random();
         for (let index = 1; index < max; index++) {
