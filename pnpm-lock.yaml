@@ -1,12 +1,12 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@vuoro/rahti': ^3.0.0
+  '@vuoro/rahti': ^3.0.2
   eslint: ^8.9.0
   gl-mat4-esm: ^1.1.4
 
 dependencies:
-  '@vuoro/rahti': 3.0.0
+  '@vuoro/rahti': 3.0.2
   gl-mat4-esm: 1.1.4
 
 devDependencies:
@@ -46,8 +46,8 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@vuoro/rahti/3.0.0:
-    resolution: {integrity: sha512-3G589jLqSfpsEwVN/lIoGOzTfccZY2UBJ74+FUax0++P4ztm7/7Xq0CdJG62DjkczWzAQ4CRqkM3lY9ps68NCQ==}
+  /@vuoro/rahti/3.0.2:
+    resolution: {integrity: sha512-f5fQkxFmGFJ5fDFs25AbsDuwOBoPPTOXYsfDkx3X3BRSv285OiYenyMekdBp2svBbb28hIHRFlZvZRNZAE5JbA==}
     dev: false
 
   /acorn-jsx/5.3.2_acorn@8.7.0:
