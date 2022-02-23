@@ -1,3 +1,4 @@
+import { component } from "@vuoro/rahti";
 import { create, perspective, ortho, lookAt, multiply, invert } from "gl-mat4-esm";
 import { uniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
@@ -19,7 +20,11 @@ export const defaultCameraIncludes = new Set([
   // "pixelRatio",
 ]);
 
-export const createCamera = async function (context, props = {}, include = defaultCameraIncludes) {
+export const createCamera = component(function createCamera(
+  context,
+  props = {},
+  include = defaultCameraIncludes
+) {
   let { fov = 60, near = 0.1, far = 1000, zoom = 1 } = props;
 
   let width = context?.gl?.drawingBufferWidth || 1;
@@ -70,7 +75,7 @@ export const createCamera = async function (context, props = {}, include = defau
   if (include.has("cameraFov")) uniformMap.cameraFov = fov;
   if (include.has("pixelRatio")) uniformMap.pixelRatio = pixelRatio;
 
-  const block = await this(uniformBlock)(context, uniformMap);
+  const block = uniformBlock(this, context, uniformMap);
 
   const update = (key, value) => {
     if (include.has(key)) block.update(key, value);
@@ -202,4 +207,4 @@ export const createCamera = async function (context, props = {}, include = defau
   };
 
   return [camera, block];
-};
+});

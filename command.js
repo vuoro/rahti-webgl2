@@ -1,8 +1,8 @@
-import { cleanup } from "@vuoro/rahti";
+import { cleanup, component } from "@vuoro/rahti";
 
 const blank = {};
 
-export const command = function (
+export const command = component(function command(
   { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend },
   {
     // Static
@@ -44,7 +44,7 @@ export const command = function (
   if (attributes === blank) throw new Error("missing at least one attribute");
 
   const isInstanced = !!instances;
-  const instanceList = instances?.instances;
+  const instanceList = instances?.rahti_instances;
   const usesElements = !!elements;
   const UNSIGNED_SHORT = gl.UNSIGNED_SHORT;
 
@@ -58,8 +58,8 @@ export const command = function (
     attributeLines += `in ${shaderType} ${key};\n`;
   }
 
-  if (instances) {
-    for (const [key, { shaderType }] of instances.attributes) {
+  if (isInstanced) {
+    for (const [key, { shaderType }] of instances.rahti_attributes) {
       attributeLines += `in ${shaderType} ${key};\n`;
     }
   }
@@ -134,13 +134,16 @@ ${fragment}`;
     for (const key in attributes) {
       const attribute = attributes[key];
       count = Math.min(count, attribute.count);
-      attribute.countSubscribers.add(measureCount);
     }
   };
+  for (const key in attributes) {
+    const attribute = attributes[key];
+    attribute.countSubscribers.add(measureCount);
+  }
   measureCount();
 
   // Rahti cleanup
-  cleanup(this).then(() => {
+  cleanup(this, () => {
     gl.deleteShader(vertexShader);
     gl.deleteShader(fragmentShader);
     gl.deleteProgram(program);
@@ -156,7 +159,7 @@ ${fragment}`;
     const { name } = gl.getActiveAttrib(program, i);
     const location = gl.getAttribLocation(program, name);
 
-    const instancedAttribute = instances?.attributes.get(name);
+    const instancedAttribute = instances?.rahti_attributes.get(name);
     const attribute = attributes[name] || instancedAttribute;
     const isInstanced = !!instancedAttribute;
 
@@ -251,7 +254,7 @@ ${fragment}`;
   };
 
   return render;
-};
+});
 
 const logError = (log, shader) => {
   const position = log.match(/(\d+:\d+)/g)[0];

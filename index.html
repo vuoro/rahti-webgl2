@@ -16,7 +16,7 @@
     <canvas id="canvas"></canvas>
 
     <script type="module">
-      import { root, state } from "@vuoro/rahti";
+      import { state, component } from "@vuoro/rahti";
       import {
         context,
         uniformBlock,
@@ -32,31 +32,31 @@
       // and for commands?
       // write each piece of the API
 
-      const graphics = async function () {
-        const thisContext = await this(context)(document.getElementById("canvas"));
+      const graphics = component(function () {
+        const thisContext = context(this, document.getElementById("canvas"));
 
-        const shape = await this(attribute)(thisContext, [
+        const shape = attribute(this, thisContext, [
           Float32Array.of(0, 0),
           Float32Array.of(1, 0),
           Float32Array.of(1, 1),
           Float32Array.of(0, 1),
         ]);
-        const shared = await this(uniformBlock)(thisContext, { time: 0, lightColor: [0, 0, 0] });
-        const smallTexture = await this(texture)(thisContext, {
+        const shared = uniformBlock(this, thisContext, { time: 0, lightColor: [0, 0, 0] });
+        const smallTexture = texture(this, thisContext, {
           pixels: new Uint8Array(64 * 64 * 4).fill(128),
         });
 
-        const [cameraController, camera] = await this(createCamera)(thisContext);
+        const [cameraController, camera] = createCamera(this, thisContext);
 
-        const triangleElements = await this(elements)(thisContext, Int16Array.of(0, 1, 2));
-        const quadElements = await this(elements)(thisContext, Int16Array.of(0, 1, 2, 2, 3, 0));
+        const triangleElements = elements(this, thisContext, Int16Array.of(0, 1, 2));
+        const quadElements = elements(this, thisContext, Int16Array.of(0, 1, 2, 2, 3, 0));
 
-        const quadInstance = await this(instances)(thisContext, {
+        const quadInstance = instances(this, thisContext, {
           color: [1, 1, 1],
           offset: [0, 0],
         });
 
-        const drawTriangle = await this(command)(thisContext, {
+        const drawTriangle = command(this, thisContext, {
           attributes: { shape },
           textures: { smallTexture },
           // elements: triangleElements,
@@ -77,7 +77,7 @@
           `,
         });
 
-        const drawQuad = await this(command)(thisContext, {
+        const drawQuad = command(this, thisContext, {
           attributes: { shape },
           uniformBlocks: { camera },
           elements: quadElements,
@@ -110,12 +110,10 @@
           shared,
           cameraController,
         };
-      };
+      });
 
-      const app = async function () {
-        const { frame, commands, resources, quadInstance, shared, cameraController } = await this(
-          graphics
-        )();
+      const app = component(function () {
+        const { frame, commands, quadInstance, shared, cameraController } = graphics(this);
         const { clear, drawTriangle, drawQuad } = commands;
 
         frame(() => {
@@ -125,19 +123,20 @@
           drawQuad();
         });
 
-        const [, { increment }] = await this(state)(0, getActions);
-        setTimeout(increment, Math.random() * 2000);
+        const [, { increment }] = state(this, 0, getActions);
+        setTimeout(increment, Math.random() * 300);
 
-        const max = 5000 * Math.random();
+        const max = 50 * Math.random();
+        // const max = 50;
         for (let index = 1; index < max; index++) {
-          if (Math.random() > 0.5) this(quad, index)(index, quadInstance);
+          if (Math.random() < 0.75) quad(index, this, index, quadInstance);
         }
 
         document.addEventListener("pointermove", ({ x, y }) => {
           cameraController.target[0] = -x * 0.001;
           cameraController.target[1] = y * 0.001;
         });
-      };
+      });
 
       const getActions = (get, set) => ({
         increment: () => {
@@ -145,19 +144,17 @@
         },
       });
 
-      const quad = function (index, quadInstance) {
-        // const [, { increment }] = await this(state)(0, getActions);
-        // setTimeout(increment, Math.random() * 1000);
+      const quad = component(function (index, quadInstance) {
+        const [, { increment }] = state(this, 0, getActions);
+        setTimeout(increment, Math.random() * 300);
 
-        const attributes = {
-          offset: Float32Array.of(-index * 0.1, -index * 0.1),
-        };
+        const instance = quadInstance(this, {
+          offset: Float32Array.of(-index * 0.05, -index * 0.05),
+          color: Float32Array.of(Math.random(), Math.random(), Math.random()),
+        });
+      });
 
-        if (Math.random() > 0.5) attributes.color = [Math.random(), Math.random(), Math.random()];
-        this(quadInstance)(attributes);
-      };
-
-      root(app)();
+      app(self);
     </script>
   </body>
 </html>

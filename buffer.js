@@ -1,7 +1,7 @@
-import { cleanup } from "@vuoro/rahti";
-import { cancelPreRenderJob, preRenderJobs, requestPreRenderJob } from "./animation-frame.js";
+import { cleanup, component } from "@vuoro/rahti";
+import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
-export const buffer = function (
+export const buffer = component(function buffer(
   { gl, setBuffer, requestRendering },
   data,
   binding = "ARRAY_BUFFER",
@@ -48,31 +48,25 @@ export const buffer = function (
 
   let firstDirty = Infinity;
   let lastDirty = 0;
+  let shouldSet = true;
 
   const set = (data = allData) => {
     allData = data;
     bufferObject.allData = allData;
-    bufferObject.count = data.length / dimensions;
-    setBuffer(buffer, BINDING);
-    gl.bufferData(BINDING, data, USAGE);
+    bufferObject.count = allData.length / dimensions;
 
     for (const subscriber of countSubscribers) {
       subscriber(bufferObject.count);
     }
 
-    if (preRenderJobs.has(commitUpdates)) {
-      preRenderJobs.delete(commitUpdates);
-      firstDirty = Infinity;
-      lastDirty = 0;
-    }
-
-    requestRendering();
+    shouldSet = true;
+    requestPreRenderJob(commitUpdates);
   };
 
   requestPreRenderJob(set);
 
-  const update = (data, offset) => {
-    const length = data.length;
+  const update = function (data, offset) {
+    const length = data?.length;
 
     firstDirty = Math.min(offset, firstDirty);
     lastDirty = Math.max(offset + length, lastDirty);
@@ -86,15 +80,23 @@ export const buffer = function (
     requestPreRenderJob(commitUpdates);
   };
 
-  const commitUpdates = () => {
+  const commitUpdates = function () {
     setBuffer(buffer, BINDING);
-    gl.bufferSubData(
-      BINDING,
-      firstDirty * BYTES_PER_ELEMENT,
-      allData,
-      firstDirty,
-      lastDirty - firstDirty
-    );
+
+    if (shouldSet) {
+      // console.log("set", bufferObject.count);
+      gl.bufferData(BINDING, allData, USAGE);
+      shouldSet = false;
+    } else {
+      // console.log("update", allData.length, firstDirty, lastDirty);
+      gl.bufferSubData(
+        BINDING,
+        firstDirty * BYTES_PER_ELEMENT,
+        allData,
+        firstDirty,
+        lastDirty - firstDirty
+      );
+    }
 
     firstDirty = Infinity;
     lastDirty = 0;
@@ -102,7 +104,7 @@ export const buffer = function (
     requestRendering();
   };
 
-  cleanup(this).then(() => {
+  cleanup(this, () => {
     gl.deleteBuffer(buffer);
     cancelPreRenderJob(commitUpdates);
     cancelPreRenderJob(set);
@@ -112,7 +114,7 @@ export const buffer = function (
   bufferObject.update = update;
 
   return bufferObject;
-};
+});
 
 export const dataToTypes = (data) => {
   if (typeof data === "number") {

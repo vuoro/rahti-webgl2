@@ -1,8 +1,8 @@
-import { cleanup } from "@vuoro/rahti";
+import { cleanup, component } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 import { dataToTypes } from "./buffer.js";
 
-export const uniformBlock = function (context, uniformMap) {
+export const uniformBlock = component(function uniformBlock(context, uniformMap) {
   const { gl, setBuffer, requestRendering } = context;
 
   const offsets = new Map();
@@ -106,9 +106,9 @@ export const uniformBlock = function (context, uniformMap) {
     requestRendering();
   };
 
-  cleanup(this).then(() => {
+  cleanup(this, () => {
     cancelPreRenderJob(commitUpdate);
   });
 
   return { uniforms, update, bindIndex };
-};
+});

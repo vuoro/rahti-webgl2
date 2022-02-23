@@ -1,15 +1,15 @@
-import { cleanup } from "@vuoro/rahti";
+import { component, cleanup } from "@vuoro/rahti";
 import { requestPreRenderJob } from "./animation-frame.js";
 import { buffer } from "./buffer.js";
 
-export const instances = async function (context, attributeMap) {
+export const instances = component(function instances(context, attributeMap) {
   const attributes = new Map();
 
   for (const key in attributeMap) {
     const value = attributeMap[key];
 
     const data = [value];
-    const bufferObject = await this(buffer)(context, data, undefined, "DYNAMIC_DRAW");
+    const bufferObject = buffer(this, context, data, undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
     bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
@@ -17,23 +17,27 @@ export const instances = async function (context, attributeMap) {
     attributes.set(key, bufferObject);
   }
 
-  const additions = new Set();
+  const additions = new Map();
   const deletions = new Set();
-  const instances = new Map();
-  const slots = new Map();
+
+  const instancesToSlots = new Map();
+  const slotsToInstances = new Map();
+  const datas = new Map();
+
   const freeSlots = [];
   const changes = new Map();
   const orphans = new Set();
 
   const buildInstances = () => {
-    const oldSize = instances.size;
+    const oldSize = instancesToSlots.size;
     const newSize = oldSize + additions.size - deletions.size;
 
     // Mark deletions as free slots
     for (const instance of deletions) {
-      const slot = instances.get(instance);
-      instances.delete(instance);
-      slots.delete(slot);
+      const slot = instancesToSlots.get(instance);
+      instancesToSlots.delete(instance);
+      slotsToInstances.delete(slot);
+      datas.delete(instance);
 
       if (slot < newSize) {
         freeSlots.push(slot);
@@ -42,33 +46,34 @@ export const instances = async function (context, attributeMap) {
 
     // Mark orphans
     for (let slot = newSize; slot < oldSize; slot++) {
-      const instance = slots.get(slot);
+      const instance = slotsToInstances.get(slot);
 
       if (instance) {
-        instances.delete(instance);
-        slots.delete(slot);
         orphans.add(instance);
+        instancesToSlots.delete(instance);
+        slotsToInstances.delete(slot);
       }
     }
 
     // Add new instances
-    for (const instance of additions) {
-      const slot = freeSlots.length ? freeSlots.pop() : instances.size;
-      instances.set(instance, slot);
-      slots.set(slot, instance);
+    for (const [instance, data] of additions) {
+      const slot = freeSlots.length ? freeSlots.pop() : instancesToSlots.size;
+      datas.set(instance, data);
+      instancesToSlots.set(instance, slot);
+      slotsToInstances.set(slot, instance);
       changes.set(instance, slot);
     }
 
     // Move orphans into remaining slots
     for (const instance of orphans) {
       const slot = freeSlots.pop();
-      instances.set(instance, slot);
-      slots.set(slot, instance);
+      instancesToSlots.set(instance, slot);
+      slotsToInstances.set(slot, instance);
       changes.set(instance, slot);
     }
 
     // Create new typedarrays
-    for (const [key, { allData, Constructor, dimensions, set }] of attributes) {
+    for (const [key, { allData, Constructor, dimensions, set, defaultValue }] of attributes) {
       let newData;
 
       if (newSize <= oldSize) {
@@ -82,7 +87,15 @@ export const instances = async function (context, attributeMap) {
 
       // And fill in the changes
       for (const [instance, slot] of changes) {
-        const value = instance.get(key);
+        const data = datas.get(instance);
+        const value =
+          data instanceof Map
+            ? data.has(key)
+              ? data.get(key)
+              : defaultValue
+            : data instanceof Object && key in data
+            ? data[key]
+            : defaultValue;
 
         if (dimensions === 1) {
           newData[slot] = value;
@@ -100,70 +113,73 @@ export const instances = async function (context, attributeMap) {
     changes.clear();
   };
 
-  const instanceEffect = async function (newAttributes) {
-    const instance = await this(instanceCreator)();
-
-    if (newAttributes) {
-      for (const key in newAttributes) {
-        const value = newAttributes[key];
-        instance.set(key, value);
-
-        const slot = instances.get(instance);
-        if (slot !== undefined) {
-          const { dimensions, update } = attributes.get(key);
-          update(value, slot * dimensions);
-        }
-
-        this(instanceAttributeResetter, key)(key, instance);
-      }
-    }
-  };
-
-  const instanceCreator = function () {
-    const instance = new Map();
-
-    for (const [key, { defaultValue }] of attributes) {
-      instance.set(key, defaultValue);
-    }
-
-    additions.add(instance);
-    requestPreRenderJob(buildInstances);
-
-    cleanup(this).then(() => {
-      if (additions.has(instance)) {
-        additions.delete(instance);
-      } else {
-        deletions.add(instance);
-      }
-
+  const instanceCreator = component(function instanceCreator() {
+    if (!instancesToSlots.has(this)) {
+      additions.set(this, undefined);
       requestPreRenderJob(buildInstances);
-    });
+    }
 
-    return instance;
-  };
-
-  const instanceAttributeResetter = function (key, instance) {
-    cleanup(this).then((isFinal) => {
-      if (isFinal) {
-        const { dimensions, defaultValue, update } = attributes.get(key);
-        instance.set(key, defaultValue);
-        const slot = instances.get(instance);
-
-        if (slot !== undefined && !deletions.has(instance)) {
-          update(defaultValue, slot * dimensions);
-        }
+    cleanup(this, () => {
+      if (additions.has(this)) {
+        additions.delete(this);
+      } else {
+        deletions.add(this);
+        requestPreRenderJob(buildInstances);
       }
     });
-  };
 
-  cleanup(this).then(() => {
-    attributes.clear();
-    additions.clear();
-    deletions.clear();
+    return this;
   });
 
-  instanceEffect.attributes = attributes;
-  instanceEffect.instances = instances;
+  const instanceFront = function (first, second, third) {
+    // Mimic Rahti params logic
+    const thirdIsData = third instanceof Object;
+    const secondIsData = !thirdIsData && second instanceof Object;
 
-  return instanceEffect;
-};
+    const key = thirdIsData ? first : secondIsData ? undefined : first;
+    const parent = key === undefined ? first : second;
+    const data = thirdIsData ? third : secondIsData ? second : undefined;
+
+    // Use a component to create an instance
+    const instance = key === undefined ? instanceCreator(parent) : instanceCreator(key, parent);
+
+    if (data) {
+      if (instancesToSlots.has(instance)) {
+        // Trigger updates on re-renders
+        datas.set(instance, data);
+        for (const [key, { dimensions, update, defaultValue, allData }] of attributes) {
+          const value =
+            data instanceof Map
+              ? data.has(key)
+                ? data.get(key)
+                : defaultValue
+              : data instanceof Object && key in data
+              ? data[key]
+              : defaultValue;
+
+          const offset = dimensions * instancesToSlots.get(instance);
+
+          let hasChanged = false;
+          if (dimensions === 1) {
+            hasChanged = hasChanged || allData[offset] !== value;
+          } else {
+            for (let index = 0; index < dimensions; index++) {
+              hasChanged = hasChanged || allData[offset + index] !== value[index];
+              if (hasChanged) break;
+            }
+          }
+
+          if (hasChanged) update(value, offset);
+        }
+      } else if (additions.has(instance)) {
+        // Set data on initial creation
+        additions.set(instance, data);
+      }
+    }
+  };
+
+  instanceFront.rahti_attributes = attributes;
+  instanceFront.rahti_instances = instancesToSlots;
+
+  return instanceFront;
+});

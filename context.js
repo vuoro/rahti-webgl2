@@ -1,4 +1,4 @@
-import { state, cleanup, update } from "@vuoro/rahti";
+import { cleanup, update, component } from "@vuoro/rahti";
 import { cancelJobsAndStopFrame, requestRenderJob } from "./animation-frame.js";
 
 const defaultAttributes = {
@@ -10,7 +10,7 @@ const defaultOptions = {
   pixelRatio: 1,
 };
 
-export const context = function (canvas, inputAttributes, options) {
+export const context = component(function context(canvas, inputAttributes, options) {
   if (!canvas || !(canvas instanceof Node)) throw new Error("Missing canvas");
 
   const attributes = { ...defaultAttributes, ...inputAttributes };
@@ -161,16 +161,15 @@ export const context = function (canvas, inputAttributes, options) {
     event.preventDefault();
     cancelJobsAndStopFrame();
   };
-  const component = this;
   const handleRestored = () => {
     console.log("restoring context");
-    update(component);
+    update(this);
   };
 
   canvas.addEventListener("webglcontextlost", handleLost);
   canvas.addEventListener("webglcontextrestored", handleRestored);
 
-  cleanup(this).then(() => {
+  cleanup(this, () => {
     cancelJobsAndStopFrame();
     observer.disconnect();
     canvas.removeEventListener("webglcontextlost", handleLost);
@@ -208,4 +207,4 @@ export const context = function (canvas, inputAttributes, options) {
     frame,
     requestRendering,
   };
-};
+});

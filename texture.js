@@ -1,3 +1,4 @@
+import { component } from "@vuoro/rahti";
 import { requestPreRenderJob } from "./animation-frame.js";
 
 const defaultParameters = {
@@ -11,7 +12,7 @@ const defaultMipParameters = {
   TEXTURE_MIN_FILTER: "NEAREST_MIPMAP_LINEAR",
 };
 
-export const texture = function (
+export const texture = component(function texture(
   { gl, setTexture, requestRendering, textureIndexes },
   {
     shaderType = "sampler2D",
@@ -69,4 +70,4 @@ export const texture = function (
   if (pixels) update(pixels, 0, 0, width, height);
 
   return { shaderType, update, index: textureIndexes.get(texture) };
-};
+});
