@@ -140,7 +140,7 @@ export const context = component(function context(canvas, inputAttributes, optio
       const isFallback = size === entry.contentRect;
       const width = isFallback ? size.width : size[0].inlineSize;
       const height = isFallback ? size.height : size[0].blockSize;
-      const ratio = (isDeviceSize ? 1 : window.devicePixelRatio) * pixelRatio;
+      const ratio = (isDeviceSize ? 1 : globalThis.devicePixelRatio || 1) * pixelRatio;
 
       canvas.width = width * ratio;
       canvas.height = height * ratio;

@@ -29,7 +29,7 @@ export const createCamera = component(function createCamera(
 
   let width = context?.gl?.drawingBufferWidth || 1;
   let height = context?.gl?.drawingBufferHeight || 1;
-  let pixelRatio = window.devicePixelRatio;
+  let pixelRatio = globalThis.devicePixelRatio || 1;
   let projectionNeedsUpdate = true;
 
   const projection = create();
