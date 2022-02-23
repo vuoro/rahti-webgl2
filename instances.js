@@ -88,14 +88,16 @@ export const instances = component(function instances(context, attributeMap) {
       // And fill in the changes
       for (const [instance, slot] of changes) {
         const data = datas.get(instance);
-        const value =
-          data instanceof Map
-            ? data.has(key)
-              ? data.get(key)
-              : defaultValue
-            : data instanceof Object && key in data
-            ? data[key]
-            : defaultValue;
+
+        const isMap = data instanceof Map;
+        const isObject = data instanceof Object;
+        const value = isMap
+          ? data.has(key)
+            ? data.get(key)
+            : defaultValue
+          : isObject && key in data
+          ? data[key]
+          : defaultValue;
 
         if (dimensions === 1) {
           newData[slot] = value;
@@ -147,15 +149,18 @@ export const instances = component(function instances(context, attributeMap) {
       if (instancesToSlots.has(instance)) {
         // Trigger updates on re-renders
         datas.set(instance, data);
+
+        const isMap = data instanceof Map;
+        const isObject = data instanceof Object;
+
         for (const [key, { dimensions, update, defaultValue, allData }] of attributes) {
-          const value =
-            data instanceof Map
-              ? data.has(key)
-                ? data.get(key)
-                : defaultValue
-              : data instanceof Object && key in data
-              ? data[key]
-              : defaultValue;
+          const value = isMap
+            ? data.has(key)
+              ? data.get(key)
+              : defaultValue
+            : isObject && key in data
+            ? data[key]
+            : defaultValue;
 
           const offset = dimensions * instancesToSlots.get(instance);
 

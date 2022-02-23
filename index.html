@@ -124,10 +124,10 @@
         });
 
         const [, { increment }] = state(this, 0, getActions);
-        setTimeout(increment, Math.random() * 300);
+        setTimeout(increment, Math.random() * 200);
 
-        const max = 50 * Math.random();
-        // const max = 50;
+        const max = 10 * (0.5 + Math.random() * 0.5);
+        // const max = 500;
         for (let index = 1; index < max; index++) {
           if (Math.random() < 0.75) quad(index, this, index, quadInstance);
         }
