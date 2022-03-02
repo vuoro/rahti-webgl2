@@ -113,7 +113,7 @@ export const context = component(function context(canvas, inputAttributes, optio
     color.forEach((value, index) => {
       clearColor[index] = value;
     });
-    gl.clearColor(...color);
+    gl.clearColor(...clearColor);
     if (lastDepth.current !== depth) {
       gl.clearDepth(depth);
       lastDepth = depth;
