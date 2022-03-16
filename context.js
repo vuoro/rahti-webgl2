@@ -154,7 +154,11 @@ export const context = component(function context(canvas, inputAttributes, optio
     }
   });
 
-  observer.observe(canvas, { box: "device-pixel-content-box" });
+  try {
+    observer.observe(canvas, { box: "device-pixel-content-box" });
+  } catch {
+    observer.observe(canvas);
+  }
 
   const handleLost = (event) => {
     console.log("context lost");
