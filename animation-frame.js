@@ -6,7 +6,7 @@ let frameNumber = 0;
 let totalSubscribers = 0;
 let frame = null;
 
-export const subscribeToAnimationFrame = (callback, nthFrame) => {
+export const subscribeToAnimationFrame = (callback, nthFrame = 1) => {
   if (!animationFrameSets.has(nthFrame)) {
     animationFrameSets.set(nthFrame, new Set());
   }
@@ -17,7 +17,7 @@ export const subscribeToAnimationFrame = (callback, nthFrame) => {
   frame = frame || requestAnimationFrame(animationFrame);
 };
 
-export const unsubscribeFromAnimationFrame = (callback, nthFrame) => () => {
+export const unsubscribeFromAnimationFrame = (callback, nthFrame = 1) => {
   animationFrameSets.get(nthFrame).delete(callback);
   totalSubscribers--;
 };
@@ -48,19 +48,26 @@ export const cancelJobsAndStopFrame = () => {
   renderJobs.clear();
 };
 
+const runSets = new Set();
+
 const animationFrame = (timestamp) => {
-  let shouldRunAllFrames = false;
-  for (const [nthFrame] of animationFrameSets) {
+  for (const [nthFrame, set] of animationFrameSets) {
     if (frameNumber % nthFrame === 0) {
-      shouldRunAllFrames = true;
-      break;
+      for (const subscriber of set) {
+        subscriber(timestamp, frameNumber);
+      }
+      runSets.add(set);
     }
   }
 
-  if (shouldRunAllFrames) {
+  if (renderJobs.size || preRenderJobs.size) {
+    // Looks like we're going to render, so we might as well run the other sets too
+
     for (const [, set] of animationFrameSets) {
-      for (const subscriber of set) {
-        subscriber(timestamp, frameNumber);
+      if (!runSets.has(set)) {
+        for (const subscriber of set) {
+          subscriber(timestamp, frameNumber);
+        }
       }
     }
   }
@@ -81,6 +88,7 @@ const animationFrame = (timestamp) => {
   }
 
   frameNumber++;
+  runSets.clear();
 
   if (totalSubscribers !== 0) {
     frame = requestAnimationFrame(animationFrame);
