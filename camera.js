@@ -25,6 +25,10 @@ export const createCamera = component(function createCamera(
   props = {},
   include = defaultCameraIncludes
 ) {
+  const subscribers = new Set();
+  const subscribe = (callback) => subscribers.add(callback);
+  const unsubscribe = (callback) => subscribers.delete(callback);
+
   let { fov = 60, near = 0.1, far = 1000, zoom = 1 } = props;
 
   let width = context?.gl?.drawingBufferWidth || 1;
@@ -132,13 +136,15 @@ export const createCamera = component(function createCamera(
     if (projectionNeedsUpdate) updateProjection();
     updateView();
     updateCombined();
+
+    for (const subscriber of subscribers) {
+      subscriber(camera);
+    }
   };
 
   const updateDevicePixelRatio = () => {
     update("pixelRatio", pixelRatio);
   };
-
-  requestPreRenderJob(updateCamera);
 
   context.resizeSubscribers.add((x, y, drawingBufferWidth, drawingBufferHeight, ratio) => {
     width = drawingBufferWidth;
@@ -170,6 +176,9 @@ export const createCamera = component(function createCamera(
     target: new Proxy(target, proxyHandler),
     up: new Proxy(up, proxyHandler),
     direction,
+
+    subscribe,
+    unsubscribe,
 
     get fov() {
       return fov;
@@ -205,6 +214,8 @@ export const createCamera = component(function createCamera(
       requestPreRenderJob(updateCamera);
     },
   };
+
+  requestPreRenderJob(updateCamera);
 
   return [camera, block];
 });
