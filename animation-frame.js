@@ -84,7 +84,7 @@ const animationFrame = (timestamp) => {
 
   for (const job of postRenderJobs) {
     postRenderJobs.delete(job);
-    job(timestamp);
+    job();
   }
 
   frameNumber++;
