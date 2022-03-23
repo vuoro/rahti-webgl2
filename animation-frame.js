@@ -49,12 +49,16 @@ export const cancelJobsAndStopFrame = () => {
 };
 
 const runSets = new Set();
+let lastTime = performance.now();
 
 const animationFrame = (timestamp) => {
+  const sinceLastFrame = timestamp - lastTime;
+  lastTime = timestamp;
+
   for (const [nthFrame, set] of animationFrameSets) {
     if (frameNumber % nthFrame === 0) {
       for (const subscriber of set) {
-        subscriber(timestamp, frameNumber);
+        subscriber(timestamp, sinceLastFrame, frameNumber);
       }
       runSets.add(set);
     }
@@ -66,7 +70,7 @@ const animationFrame = (timestamp) => {
     for (const [, set] of animationFrameSets) {
       if (!runSets.has(set)) {
         for (const subscriber of set) {
-          subscriber(timestamp, frameNumber);
+          subscriber(timestamp, sinceLastFrame, frameNumber);
         }
       }
     }
