@@ -135,12 +135,9 @@ export const context = component(function context(canvas, inputAttributes, optio
 
   const observer = new ResizeObserver((entries) => {
     for (const entry of entries) {
-      const size = entry.devicePixelContentBoxSize || entry.contentBoxSize || entry.contentRect;
-      const isDeviceSize = "devicePixelContentBoxSize" in entry;
-      const isFallback = size === entry.contentRect;
-      const width = isFallback ? size.width : size[0].inlineSize;
-      const height = isFallback ? size.height : size[0].blockSize;
-      const ratio = (isDeviceSize ? 1 : globalThis.devicePixelRatio || 1) * pixelRatio;
+      const width = entry.contentBoxSize?.[0]?.inlineSize || entry.width || 0;
+      const height = entry.contentBoxSize?.[0]?.blockSize || entry.height || 0;
+      const ratio = (globalThis?.devicePixelRatio || 1) * pixelRatio;
 
       canvas.width = width * ratio;
       canvas.height = height * ratio;

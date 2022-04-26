@@ -33,7 +33,9 @@
       // write each piece of the API
 
       const graphics = component(function () {
-        const thisContext = context(this, document.getElementById("canvas"));
+        const thisContext = context(this, document.getElementById("canvas"), undefined, {
+          pixelRatio: 0.25,
+        });
 
         const shape = attribute(this, thisContext, [
           Float32Array.of(0, 0),
