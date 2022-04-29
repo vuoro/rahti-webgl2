@@ -160,6 +160,7 @@ export const context = component(function context(canvas, inputAttributes, optio
   const handleLost = (event) => {
     console.log("context lost");
     event.preventDefault();
+    stopped = true;
     cancelJobsAndStopFrame();
   };
   const handleRestored = () => {
@@ -171,6 +172,7 @@ export const context = component(function context(canvas, inputAttributes, optio
   canvas.addEventListener("webglcontextrestored", handleRestored);
 
   cleanup(this, () => {
+    stopped = true;
     cancelJobsAndStopFrame();
     observer.disconnect();
     canvas.removeEventListener("webglcontextlost", handleLost);
@@ -178,12 +180,13 @@ export const context = component(function context(canvas, inputAttributes, optio
   });
 
   let renderFunction;
+  let stopped = false;
   const frame = (renderPass) => {
     renderFunction = renderPass;
     requestRendering();
   };
   const executeRender = () => {
-    if (renderFunction) renderFunction();
+    if (renderFunction && !stopped) renderFunction();
   };
 
   const requestRendering = () => {

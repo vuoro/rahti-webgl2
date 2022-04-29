@@ -1,5 +1,5 @@
 import { component, cleanup } from "@vuoro/rahti";
-import { requestPreRenderJob } from "./animation-frame.js";
+import { preRenderJobs, requestPreRenderJob } from "./animation-frame.js";
 import { buffer } from "./buffer.js";
 
 export const instances = component(function instances(context, attributeMap) {
@@ -124,7 +124,7 @@ export const instances = component(function instances(context, attributeMap) {
     cleanup(this, () => {
       if (additions.has(this)) {
         additions.delete(this);
-      } else {
+      } else if (!dead) {
         deletions.add(this);
         requestPreRenderJob(buildInstances);
       }
@@ -185,6 +185,12 @@ export const instances = component(function instances(context, attributeMap) {
 
   instanceFront.rahti_attributes = attributes;
   instanceFront.rahti_instances = instancesToSlots;
+
+  let dead = false;
+  cleanup(this, () => {
+    preRenderJobs.delete(buildInstances);
+    dead = true;
+  });
 
   return instanceFront;
 });

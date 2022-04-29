@@ -115,7 +115,12 @@
       });
 
       const app = component(function () {
-        const { frame, commands, quadInstance, shared, cameraController } = graphics(this);
+        const [value, { increment }] = state(this, 0, getActions);
+        setTimeout(() => {
+          increment();
+        }, Math.random() * 3000);
+
+        const { frame, commands, quadInstance, shared, cameraController } = graphics(this, value);
         const { clear, drawTriangle, drawQuad } = commands;
 
         frame(() => {
@@ -124,9 +129,6 @@
           drawTriangle("LINES");
           drawQuad();
         });
-
-        const [, { increment }] = state(this, 0, getActions);
-        setTimeout(increment, Math.random() * 200);
 
         const max = 10 * (0.5 + Math.random() * 0.5);
         // const max = 500;
