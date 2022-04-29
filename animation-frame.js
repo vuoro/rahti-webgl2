@@ -46,6 +46,7 @@ export const cancelJobsAndStopFrame = () => {
 
   preRenderJobs.clear();
   renderJobs.clear();
+  postRenderJobs.clear();
 };
 
 const runSets = new Set();
