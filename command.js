@@ -149,7 +149,8 @@ ${fragment}`;
     gl.deleteProgram(program);
     gl.deleteVertexArray(vao);
 
-    for (const { countSubscribers } of attributes) {
+    for (const key of attributes) {
+      const { countSubscribers } = attributes[key];
       countSubscribers.delete(measureCount);
     }
   });
