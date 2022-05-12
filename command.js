@@ -91,10 +91,7 @@ ${textureLines}
 ${uniformBlockLines}
 ${fragment}`;
 
-  // console.log(finalVertex);
-  // console.log(finalFragment);
-
-  // Compile shaders and log errors
+  // Compile shaders
   const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
   gl.shaderSource(vertexShader, finalVertex);
@@ -103,13 +100,14 @@ ${fragment}`;
   gl.compileShader(vertexShader);
   gl.compileShader(fragmentShader);
 
-  // Compile program and log errors
+  // Compile program
   const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
 
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  // Log errors, but only in dev
+  if (import.meta?.env?.DEV && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
     const vertexLog = gl.getShaderInfoLog(vertexShader);
     const fragmentLog = gl.getShaderInfoLog(fragmentShader);
     if (vertexLog) logError(vertexLog, finalVertex);
