@@ -1,6 +1,6 @@
 {
   "name": "@vuoro/rahti-webgl2",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "description": "WebGL2 effects for Rahti",
   "main": "main.js",
   "type": "module",
@@ -8,7 +8,7 @@
     ".": "./main.js"
   },
   "scripts": {
-    "start": "npx @web/dev-server --watch"
+    "start": "pnpm --package=@web/dev-server dlx web-dev-server --watch"
   },
   "repository": {
     "type": "git",

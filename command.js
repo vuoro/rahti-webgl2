@@ -107,7 +107,7 @@ ${fragment}`;
   gl.linkProgram(program);
 
   // Log errors, but only in dev
-  if (import.meta?.env?.DEV && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  if (import.meta.env && import.meta.env.DEV && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
     const vertexLog = gl.getShaderInfoLog(vertexShader);
     const fragmentLog = gl.getShaderInfoLog(fragmentShader);
     if (vertexLog) logError(vertexLog, finalVertex);
