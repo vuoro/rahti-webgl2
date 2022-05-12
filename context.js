@@ -8,13 +8,14 @@ const defaultAttributes = {
 const defaultOptions = {
   clearColor: [0, 0, 0, 1],
   pixelRatio: 1,
+  debug: false,
 };
 
 export const context = component(function context(canvas, inputAttributes, options) {
   if (!canvas || !(canvas instanceof Node)) throw new Error("Missing canvas");
 
   const attributes = { ...defaultAttributes, ...inputAttributes };
-  const { clearColor, pixelRatio } = { ...defaultOptions, ...options };
+  const { clearColor, pixelRatio, debug } = { ...defaultOptions, ...options };
 
   const gl = canvas.getContext("webgl2", attributes);
   const textureIndexes = new Map();
@@ -210,5 +211,6 @@ export const context = component(function context(canvas, inputAttributes, optio
     uniformBindIndexCounter: 0,
     frame,
     requestRendering,
+    debug,
   };
 });

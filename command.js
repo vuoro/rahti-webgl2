@@ -3,7 +3,7 @@ import { cleanup, component } from "@vuoro/rahti";
 const blank = {};
 
 export const command = component(function command(
-  { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend },
+  { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend, debug },
   {
     // Static
     attributes = blank,
@@ -107,7 +107,7 @@ ${fragment}`;
   gl.linkProgram(program);
 
   // Log errors, but only in dev
-  if (import.meta.env && import.meta.env.DEV && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  if (debug && !gl.getProgramParameter(program, gl.LINK_STATUS)) {
     const vertexLog = gl.getShaderInfoLog(vertexShader);
     const fragmentLog = gl.getShaderInfoLog(fragmentShader);
     if (vertexLog) logError(vertexLog, finalVertex);
