@@ -35,6 +35,7 @@
       const graphics = component(function () {
         const thisContext = context(this, document.getElementById("canvas"), undefined, {
           pixelRatio: 0.25,
+          debug: true,
         });
 
         const shape = attribute(this, thisContext, [
@@ -80,6 +81,7 @@
         });
 
         const drawQuad = command(this, thisContext, {
+          // fragmentPrecision: `precision mediump float;`,
           attributes: { shape },
           uniformBlocks: { camera },
           elements: quadElements,
@@ -120,7 +122,7 @@
           increment();
         }, Math.random() * 3000);
 
-        const { frame, commands, quadInstance, shared, cameraController } = graphics(this, value);
+        const { frame, commands, quadInstance, shared, cameraController } = graphics(this);
         const { clear, drawTriangle, drawQuad } = commands;
 
         frame(() => {

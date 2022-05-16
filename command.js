@@ -19,11 +19,7 @@ export const command = component(function command(
 
     shaderVersion = "#version 300 es",
     vertexPrecision = ``,
-    fragmentPrecision = `#ifdef GL_FRAGMENT_PRECISION_HIGH
-  precision highp float;
-#else
-  precision mediump float;
-#endif`,
+    fragmentPrecision = `precision mediump float;`,
 
     // Can be overridden at runtime
     mode = "TRIANGLES",
@@ -74,7 +70,7 @@ export const command = component(function command(
     uniformBlockLines += `layout(std140) uniform ${key} {\n`;
     for (const key in uniforms) {
       const { shaderType } = uniforms[key];
-      uniformBlockLines += `  ${shaderType} ${key};\n`;
+      uniformBlockLines += `  highp ${shaderType} ${key};\n`;
     }
     uniformBlockLines += `};\n`;
   }
