@@ -126,31 +126,39 @@ export const context = component(function context(canvas, inputAttributes, optio
   };
 
   // Without a set width, the ResizeObserver will end up in an infinite loop
-  const width = canvas.style.getPropertyValue("width");
-  if (!width) {
+  const cssWidth = canvas.style.getPropertyValue("width");
+  if (!cssWidth) {
     console.warn(
       "Canvas doesn't seem to have a set CSS width. It needs one to make rahti-webgl2's ResizeObserver work properly. It will now be set to `width: 100%`."
     );
     canvas.style.setProperty("width", "100%");
   }
 
+  let currentPixelRatio = pixelRatio;
+  let width = canvas.offsetWidth;
+  let height = canvas.offsetHeight;
+
   const observer = new ResizeObserver((entries) => {
     for (const entry of entries) {
-      const width = entry.contentBoxSize?.[0]?.inlineSize || entry.width || 0;
-      const height = entry.contentBoxSize?.[0]?.blockSize || entry.height || 0;
-      const ratio = (globalThis?.devicePixelRatio || 1) * pixelRatio;
-
-      canvas.width = width * ratio;
-      canvas.height = height * ratio;
-      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-      for (const subscriber of resizeSubscribers) {
-        subscriber(0, 0, width, height, ratio);
-      }
-
-      requestRendering();
+      width = entry.contentBoxSize?.[0]?.inlineSize || entry.width || width;
+      height = entry.contentBoxSize?.[0]?.blockSize || entry.height || height;
+      resize(currentPixelRatio);
     }
   });
+
+  const resize = (pixelRatio = currentPixelRatio) => {
+    currentPixelRatio = pixelRatio;
+
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+    for (const subscriber of resizeSubscribers) {
+      subscriber(0, 0, width, height, pixelRatio);
+    }
+
+    requestRendering();
+  };
 
   try {
     observer.observe(canvas, { box: "device-pixel-content-box" });
@@ -208,6 +216,7 @@ export const context = component(function context(canvas, inputAttributes, optio
     setClear,
     clear,
     resizeSubscribers,
+    resize,
     uniformBindIndexCounter: 0,
     frame,
     requestRendering,

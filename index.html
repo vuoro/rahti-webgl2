@@ -34,7 +34,6 @@
 
       const graphics = component(function () {
         const thisContext = context(this, document.getElementById("canvas"), undefined, {
-          pixelRatio: 0.25,
           debug: true,
         });
 
@@ -109,6 +108,7 @@
 
         return {
           frame: thisContext.frame,
+          resize: thisContext.resize,
           commands: { drawTriangle, drawQuad, clear: thisContext.clear },
           quadInstance,
           shared,
@@ -118,12 +118,14 @@
 
       const app = component(function () {
         const [value, { increment }] = state(this, 0, getActions);
+
+        const { frame, commands, quadInstance, shared, cameraController, resize } = graphics(this);
+        const { clear, drawTriangle, drawQuad } = commands;
+
         setTimeout(() => {
           increment();
+          resize((Math.sin(Date.now()) * 0.5 + 0.5) * globalThis.devicePixelRatio);
         }, Math.random() * 3000);
-
-        const { frame, commands, quadInstance, shared, cameraController } = graphics(this);
-        const { clear, drawTriangle, drawQuad } = commands;
 
         frame(() => {
           clear();
