@@ -194,8 +194,8 @@ export const context = component(function context(canvas, inputAttributes, optio
     renderFunction = renderPass;
     requestRendering();
   };
-  const executeRender = () => {
-    if (renderFunction && !stopped) renderFunction();
+  const executeRender = (timestamp, sinceLastFrame, frameNumber) => {
+    if (renderFunction && !stopped) renderFunction(timestamp, sinceLastFrame, frameNumber);
   };
 
   const requestRendering = () => {

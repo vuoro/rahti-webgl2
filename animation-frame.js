@@ -79,7 +79,7 @@ const animationFrame = (timestamp) => {
 
   for (const job of preRenderJobs) {
     preRenderJobs.delete(job);
-    job(timestamp, sinceLastFrame, frameNumber);
+    job();
   }
 
   for (const job of renderJobs) {
@@ -89,7 +89,7 @@ const animationFrame = (timestamp) => {
 
   for (const job of postRenderJobs) {
     postRenderJobs.delete(job);
-    job(timestamp, sinceLastFrame, frameNumber);
+    job();
   }
 
   frameNumber++;
