@@ -19,7 +19,6 @@ export const context = component(function context(canvas, inputAttributes, optio
 
   const gl = canvas.getContext("webgl2", attributes);
   const textureIndexes = new Map();
-  const resizeSubscribers = new Set();
 
   // Caches and setters
   let currentProgram = null;
@@ -138,6 +137,13 @@ export const context = component(function context(canvas, inputAttributes, optio
   let width = canvas.offsetWidth;
   let height = canvas.offsetHeight;
 
+  const resizeSubscribers = new Set();
+  const subscribe = (subscriber) => {
+    resizeSubscribers.add(subscriber);
+    subscriber(0, 0, width, height, pixelRatio);
+  };
+  const unsubscribe = (subscriber) => resizeSubscribers.delete(subscriber);
+
   const observer = new ResizeObserver((entries) => {
     for (const entry of entries) {
       width = entry.contentBoxSize?.[0]?.inlineSize || entry.width || width;
@@ -215,7 +221,8 @@ export const context = component(function context(canvas, inputAttributes, optio
     setFramebuffer,
     setClear,
     clear,
-    resizeSubscribers,
+    subscribe,
+    unsubscribe,
     resize,
     uniformBindIndexCounter: 0,
     frame,

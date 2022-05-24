@@ -1,4 +1,4 @@
-import { component } from "@vuoro/rahti";
+import { cleanup, component } from "@vuoro/rahti";
 import { create, perspective, ortho, lookAt, multiply, invert } from "gl-mat4-esm";
 import { uniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
@@ -146,9 +146,9 @@ export const createCamera = component(function createCamera(
     update("pixelRatio", pixelRatio);
   };
 
-  context.resizeSubscribers.add((x, y, drawingBufferWidth, drawingBufferHeight, ratio) => {
-    width = drawingBufferWidth;
-    height = drawingBufferHeight;
+  const handleResize = (_, __, renderWidth, renderHeight, ratio) => {
+    width = renderWidth;
+    height = renderHeight;
 
     projectionNeedsUpdate = true;
     requestPreRenderJob(updateCamera);
@@ -157,6 +157,11 @@ export const createCamera = component(function createCamera(
       pixelRatio = ratio;
       requestPreRenderJob(updateDevicePixelRatio);
     }
+  };
+
+  context.subscribe(handleResize);
+  cleanup(this, () => {
+    context.unsubscribe(handleResize);
   });
 
   const proxyHandler = {
