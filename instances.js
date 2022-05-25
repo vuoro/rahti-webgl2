@@ -170,48 +170,6 @@ export const instances = component(function instances(context, attributeMap) {
     return this;
   });
 
-  const instanceFront = function (data) {
-    // Use a component to create an instance
-    const instance = instanceCreator(parent, key)();
-
-    if (data) {
-      if (instancesToSlots.has(instance)) {
-        // Trigger updates on re-renders
-        datas.set(instance, data);
-
-        const isMap = data instanceof Map;
-        const isObject = data instanceof Object;
-
-        for (const [key, { dimensions, update, defaultValue, allData }] of attributes) {
-          const value = isMap
-            ? data.has(key)
-              ? data.get(key)
-              : defaultValue
-            : isObject && key in data
-            ? data[key]
-            : defaultValue;
-
-          const offset = dimensions * instancesToSlots.get(instance);
-
-          let hasChanged = false;
-          if (dimensions === 1) {
-            hasChanged = hasChanged || allData[offset] !== value;
-          } else {
-            for (let index = 0; index < dimensions; index++) {
-              hasChanged = hasChanged || allData[offset + index] !== value[index];
-              if (hasChanged) break;
-            }
-          }
-
-          if (hasChanged) update(value, offset);
-        }
-      } else if (additions.has(instance)) {
-        // Set data on initial creation
-        additions.set(instance, data);
-      }
-    }
-  };
-
   instanceCreator.rahti_attributes = attributes;
   instanceCreator.rahti_instances = instancesToSlots;
 
