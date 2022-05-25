@@ -79,7 +79,7 @@ export const createCamera = component(function createCamera(
   if (include.has("cameraFov")) uniformMap.cameraFov = fov;
   if (include.has("pixelRatio")) uniformMap.pixelRatio = pixelRatio;
 
-  const block = uniformBlock(this, context, uniformMap);
+  const block = uniformBlock(this)(context, uniformMap);
 
   const update = (key, value) => {
     if (include.has(key)) block.update(key, value);

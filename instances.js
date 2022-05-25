@@ -9,7 +9,7 @@ export const instances = component(function instances(context, attributeMap) {
     const value = attributeMap[key];
 
     const data = [value];
-    const bufferObject = buffer(this, context, data, undefined, "DYNAMIC_DRAW");
+    const bufferObject = buffer(this)(context, data, undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
     bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
@@ -115,35 +115,64 @@ export const instances = component(function instances(context, attributeMap) {
     changes.clear();
   };
 
-  const instanceCreator = component(function instanceCreator() {
+  const instanceCreator = component(function instanceCreator(data) {
     if (!instancesToSlots.has(this)) {
-      additions.set(this, undefined);
+      additions.set(this, data);
       requestPreRenderJob(buildInstances);
     }
 
-    cleanup(this, () => {
-      if (additions.has(this)) {
-        additions.delete(this);
-      } else if (!dead) {
-        deletions.add(this);
-        requestPreRenderJob(buildInstances);
+    cleanup(this, (isFinal) => {
+      if (isFinal) {
+        if (additions.has(this)) {
+          additions.delete(this);
+        } else if (!dead) {
+          deletions.add(this);
+          requestPreRenderJob(buildInstances);
+        }
       }
     });
+
+    if (data) {
+      if (instancesToSlots.has(this)) {
+        // Trigger updates on re-renders
+        datas.set(this, data);
+
+        const isMap = data instanceof Map;
+        const isObject = data instanceof Object;
+
+        for (const [key, { dimensions, update, defaultValue, allData }] of attributes) {
+          const value = isMap
+            ? data.has(key)
+              ? data.get(key)
+              : defaultValue
+            : isObject && key in data
+            ? data[key]
+            : defaultValue;
+
+          const offset = dimensions * instancesToSlots.get(this);
+
+          let hasChanged = false;
+
+          if (dimensions === 1) {
+            hasChanged = allData[offset] !== value;
+          } else {
+            for (let index = 0; index < dimensions; index++) {
+              hasChanged = allData[offset + index] !== value[index];
+              if (hasChanged) break;
+            }
+          }
+
+          if (hasChanged) update(value, offset);
+        }
+      }
+    }
 
     return this;
   });
 
-  const instanceFront = function (first, second, third) {
-    // Mimic Rahti params logic
-    const thirdIsData = third instanceof Object;
-    const secondIsData = !thirdIsData && second instanceof Object;
-
-    const key = thirdIsData ? first : secondIsData ? undefined : first;
-    const parent = key === undefined ? first : second;
-    const data = thirdIsData ? third : secondIsData ? second : undefined;
-
+  const instanceFront = function (data) {
     // Use a component to create an instance
-    const instance = key === undefined ? instanceCreator(parent) : instanceCreator(key, parent);
+    const instance = instanceCreator(parent, key)();
 
     if (data) {
       if (instancesToSlots.has(instance)) {
@@ -183,8 +212,8 @@ export const instances = component(function instances(context, attributeMap) {
     }
   };
 
-  instanceFront.rahti_attributes = attributes;
-  instanceFront.rahti_instances = instancesToSlots;
+  instanceCreator.rahti_attributes = attributes;
+  instanceCreator.rahti_instances = instancesToSlots;
 
   let dead = false;
   cleanup(this, () => {
@@ -192,5 +221,5 @@ export const instances = component(function instances(context, attributeMap) {
     dead = true;
   });
 
-  return instanceFront;
+  return instanceCreator;
 });

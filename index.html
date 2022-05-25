@@ -33,32 +33,32 @@
       // write each piece of the API
 
       const graphics = component(function () {
-        const thisContext = context(this, document.getElementById("canvas"), undefined, {
+        const webglContext = context(this)(document.getElementById("canvas"), undefined, {
           debug: true,
         });
 
-        const shape = attribute(this, thisContext, [
+        const shape = attribute(this)(webglContext, [
           Float32Array.of(0, 0),
           Float32Array.of(1, 0),
           Float32Array.of(1, 1),
           Float32Array.of(0, 1),
         ]);
-        const shared = uniformBlock(this, thisContext, { time: 0, lightColor: [0, 0, 0] });
-        const smallTexture = texture(this, thisContext, {
+        const shared = uniformBlock(this)(webglContext, { time: 0, lightColor: [0, 0, 0] });
+        const smallTexture = texture(this)(webglContext, {
           pixels: new Uint8Array(64 * 64 * 4).fill(128),
         });
 
-        const [cameraController, camera] = createCamera(this, thisContext);
+        const [cameraController, camera] = createCamera(this)(webglContext);
 
-        const triangleElements = elements(this, thisContext, Int16Array.of(0, 1, 2));
-        const quadElements = elements(this, thisContext, Int16Array.of(0, 1, 2, 2, 3, 0));
+        const triangleElements = elements(this)(webglContext, Int16Array.of(0, 1, 2));
+        const quadElements = elements(this)(webglContext, Int16Array.of(0, 1, 2, 2, 3, 0));
 
-        const quadInstance = instances(this, thisContext, {
+        const quadInstance = instances(this)(webglContext, {
           color: [1, 1, 1],
           offset: [0, 0],
         });
 
-        const drawTriangle = command(this, thisContext, {
+        const drawTriangle = command(this)(webglContext, {
           attributes: { shape },
           textures: { smallTexture },
           // elements: triangleElements,
@@ -79,7 +79,7 @@
           `,
         });
 
-        const drawQuad = command(this, thisContext, {
+        const drawQuad = command(this)(webglContext, {
           // fragmentPrecision: `precision mediump float;`,
           attributes: { shape },
           uniformBlocks: { camera },
@@ -107,9 +107,9 @@
         // const framebufferTest = framebuffer({ color: [smallTexture] });
 
         return {
-          frame: thisContext.frame,
-          resize: thisContext.resize,
-          commands: { drawTriangle, drawQuad, clear: thisContext.clear },
+          frame: webglContext.frame,
+          resize: webglContext.resize,
+          commands: { drawTriangle, drawQuad, clear: webglContext.clear },
           quadInstance,
           shared,
           cameraController,
@@ -117,9 +117,10 @@
       });
 
       const app = component(function () {
-        const [value, { increment }] = state(this, 0, getActions);
+        const [value, { increment }] = state(this)(0, getActions);
 
-        const { frame, commands, quadInstance, shared, cameraController, resize } = graphics(this);
+        const { frame, commands, quadInstance, shared, cameraController, resize } =
+          graphics(this)();
         const { clear, drawTriangle, drawQuad } = commands;
 
         setTimeout(() => {
@@ -137,7 +138,7 @@
         const max = 10 * (0.5 + Math.random() * 0.5);
         // const max = 500;
         for (let index = 1; index < max; index++) {
-          if (Math.random() < 0.75) quad(index, this, index, quadInstance);
+          if (Math.random() < 0.75) quad(this, index)(index, quadInstance);
         }
 
         document.addEventListener("pointermove", ({ x, y }) => {
@@ -153,16 +154,16 @@
       });
 
       const quad = component(function (index, quadInstance) {
-        const [, { increment }] = state(this, 0, getActions);
-        setTimeout(increment, Math.random() * 300);
+        const [, { increment }] = state(this)(0, getActions);
+        setTimeout(increment, Math.random() * 744);
 
-        const instance = quadInstance(this, {
+        const instance = quadInstance(this)({
           offset: Float32Array.of(-index * 0.05, -index * 0.05),
           color: Float32Array.of(Math.random(), Math.random(), Math.random()),
         });
       });
 
-      app(globalThis);
+      app(globalThis)();
     </script>
   </body>
 </html>
