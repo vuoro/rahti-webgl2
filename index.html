@@ -1,19 +1,7 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script defer src="https://unpkg.com/es-module-shims@0.10.1/dist/es-module-shims.js"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "@vuoro/rahti": "https://cdn.skypack.dev/@vuoro/rahti",
-          "gl-mat4-esm": "https://cdn.skypack.dev/gl-mat4-esm"
-        }
-      }
-    </script>
-  </head>
-
   <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="canvas" style="width: 100%; height: 100vh"></canvas>
 
     <script type="module">
       import { state, component } from "@vuoro/rahti";
@@ -126,16 +114,15 @@
         setTimeout(() => {
           increment();
           resize((Math.sin(Date.now()) * 0.5 + 0.5) * globalThis.devicePixelRatio);
-        }, Math.random() * 3000);
+        }, Math.random() * 200);
 
         frame(() => {
           clear();
           drawTriangle();
-          drawTriangle("LINES");
           drawQuad();
         });
 
-        const max = 10 * (0.5 + Math.random() * 0.5);
+        const max = 1000 * (0.5 + Math.random() * 0.5);
         // const max = 500;
         for (let index = 1; index < max; index++) {
           if (Math.random() < 0.75) quad(this, index)(index, quadInstance);
