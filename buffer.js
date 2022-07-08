@@ -1,120 +1,128 @@
-import { cleanup, component } from "@vuoro/rahti";
+import { component } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
-export const buffer = component(function buffer(
-  { gl, setBuffer, requestRendering },
-  data,
-  binding = "ARRAY_BUFFER",
-  usage = "STATIC_DRAW",
-  types = dataToTypes(data[0])
-) {
-  const BINDING = gl[binding];
+export const buffer = component(
+  function buffer(
+    { gl, setBuffer, requestRendering },
+    data,
+    binding = "ARRAY_BUFFER",
+    usage = "STATIC_DRAW",
+    types = dataToTypes(data[0])
+  ) {
+    const BINDING = gl[binding];
 
-  const [bufferType, shaderType] = types;
-  const Constructor = bufferTypeToConstructor(bufferType);
+    const [bufferType, shaderType] = types;
+    const Constructor = bufferTypeToConstructor(bufferType);
 
-  const buffer = gl.createBuffer();
-  setBuffer(buffer, BINDING);
-
-  const dimensions = data[0].length || 1;
-  let allData = new Constructor(data.length * dimensions);
-
-  for (let index = 0; index < data.length; index++) {
-    const datum = data[index];
-
-    if (dimensions > 1) {
-      allData.set(datum, index * dimensions);
-    } else {
-      allData[index] = datum;
-    }
-  }
-
-  const { BYTES_PER_ELEMENT } = allData;
-  const count = data.length;
-  const USAGE = gl[usage];
-
-  const countSubscribers = new Set();
-
-  const bufferObject = {
-    allData,
-    buffer,
-    bufferType,
-    shaderType,
-    Constructor,
-    count,
-    dimensions,
-    countSubscribers,
-  };
-
-  let firstDirty = Infinity;
-  let lastDirty = 0;
-  let shouldSet = true;
-
-  const set = (data = allData) => {
-    allData = data;
-    bufferObject.allData = allData;
-    bufferObject.count = allData.length / dimensions;
-
-    for (const subscriber of countSubscribers) {
-      subscriber(bufferObject.count);
-    }
-
-    shouldSet = true;
-    requestPreRenderJob(commitUpdates);
-  };
-
-  requestPreRenderJob(set);
-
-  const update = function (data, offset) {
-    const length = data?.length;
-
-    firstDirty = Math.min(offset, firstDirty);
-    lastDirty = Math.max(offset + length, lastDirty);
-
-    if (length) {
-      allData.set(data, offset);
-    } else {
-      allData[offset] = data;
-    }
-
-    requestPreRenderJob(commitUpdates);
-  };
-
-  const commitUpdates = function () {
+    const buffer = gl.createBuffer();
     setBuffer(buffer, BINDING);
 
-    if (shouldSet) {
-      // console.log("set", bufferObject.count);
-      gl.bufferData(BINDING, allData, USAGE);
-      shouldSet = false;
-    } else {
-      // console.log("update", allData.length, firstDirty, lastDirty);
-      gl.bufferSubData(
-        BINDING,
-        firstDirty * BYTES_PER_ELEMENT,
-        allData,
-        firstDirty,
-        lastDirty - firstDirty
-      );
+    const dimensions = data[0].length || 1;
+    let allData = new Constructor(data.length * dimensions);
+
+    for (let index = 0; index < data.length; index++) {
+      const datum = data[index];
+
+      if (dimensions > 1) {
+        allData.set(datum, index * dimensions);
+      } else {
+        allData[index] = datum;
+      }
     }
 
-    firstDirty = Infinity;
-    lastDirty = 0;
+    const { BYTES_PER_ELEMENT } = allData;
+    const count = data.length;
+    const USAGE = gl[usage];
 
-    requestRendering();
-  };
+    const countSubscribers = new Set();
 
-  cleanup(this, () => {
-    gl.deleteBuffer(buffer);
-    cancelPreRenderJob(commitUpdates);
-    cancelPreRenderJob(set);
-  });
+    const bufferObject = {
+      allData,
+      buffer,
+      bufferType,
+      shaderType,
+      Constructor,
+      count,
+      dimensions,
+      countSubscribers,
+    };
 
-  bufferObject.set = set;
-  bufferObject.update = update;
+    let firstDirty = Infinity;
+    let lastDirty = 0;
+    let shouldSet = true;
 
-  return bufferObject;
-});
+    const set = (data = allData) => {
+      allData = data;
+      bufferObject.allData = allData;
+      bufferObject.count = allData.length / dimensions;
+
+      for (const subscriber of countSubscribers) {
+        subscriber(bufferObject.count);
+      }
+
+      shouldSet = true;
+      requestPreRenderJob(commitUpdates);
+    };
+
+    requestPreRenderJob(set);
+
+    const update = function (data, offset) {
+      const length = data?.length;
+
+      firstDirty = Math.min(offset, firstDirty);
+      lastDirty = Math.max(offset + length, lastDirty);
+
+      if (length) {
+        allData.set(data, offset);
+      } else {
+        allData[offset] = data;
+      }
+
+      requestPreRenderJob(commitUpdates);
+    };
+
+    const commitUpdates = function () {
+      setBuffer(buffer, BINDING);
+
+      if (shouldSet) {
+        // console.log("set", bufferObject.count);
+        gl.bufferData(BINDING, allData, USAGE);
+        shouldSet = false;
+      } else {
+        // console.log("update", allData.length, firstDirty, lastDirty);
+        gl.bufferSubData(
+          BINDING,
+          firstDirty * BYTES_PER_ELEMENT,
+          allData,
+          firstDirty,
+          lastDirty - firstDirty
+        );
+      }
+
+      firstDirty = Infinity;
+      lastDirty = 0;
+
+      requestRendering();
+    };
+
+    bufferObject.set = set;
+    bufferObject.update = update;
+
+    cleanups.set(this, () => {
+      gl.deleteBuffer(buffer);
+      cancelPreRenderJob(commitUpdates);
+      cancelPreRenderJob(set);
+    });
+
+    return bufferObject;
+  },
+  function () {
+    cleanups.get(this)();
+    cleanups.delete(this);
+  }
+);
+
+const cleanups = new Map();
 
 export const dataToTypes = (data) => {
   if (typeof data === "number") {
