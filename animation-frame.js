@@ -45,15 +45,15 @@ const nthFrames = new Map();
 
 export const requestPreRenderJob = (job) => {
   preRenderJobs.add(job);
-  frame = frame || requestAnimationFrame(animationFrame);
+  frame = frame || requestAnimationFrame(runAnimationFrame);
 };
 export const requestRenderJob = (job) => {
   renderJobs.add(job);
-  frame = frame || requestAnimationFrame(animationFrame);
+  frame = frame || requestAnimationFrame(runAnimationFrame);
 };
 export const requestPostRenderJob = (job) => {
   postRenderJobs.add(job);
-  frame = frame || requestAnimationFrame(animationFrame);
+  frame = frame || requestAnimationFrame(runAnimationFrame);
 };
 
 export const cancelPreRenderJob = (job) => preRenderJobs.delete(job);
@@ -73,7 +73,7 @@ export const cancelJobsAndStopFrame = () => {
 const runSets = new Set();
 let lastTime = performance.now();
 
-const animationFrame = (timestamp) => {
+const runAnimationFrame = (timestamp) => {
   const sinceLastFrame = timestamp - lastTime;
   lastTime = timestamp;
 
