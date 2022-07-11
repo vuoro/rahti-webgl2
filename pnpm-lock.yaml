@@ -1,13 +1,13 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@vuoro/rahti': ^7.1.1
+  '@vuoro/rahti': ^8.0.1
   '@web/dev-server': ^0.1.32
   eslint: ^8.19.0
   gl-mat4-esm: ^1.1.4
 
 dependencies:
-  '@vuoro/rahti': 7.1.1
+  '@vuoro/rahti': 8.0.1
   '@web/dev-server': 0.1.32
   gl-mat4-esm: 1.1.4
 
@@ -223,8 +223,8 @@ packages:
       '@types/node': 18.0.3
     dev: false
 
-  /@vuoro/rahti/7.1.1:
-    resolution: {integrity: sha512-3aXeRbT/ctUc6hDXpCvLbsdly22R6h77sTINixfokdKyheIEV2oGUbaHsb3RUgEeEHxEJe2suKQhTVHbvCaVwA==}
+  /@vuoro/rahti/8.0.1:
+    resolution: {integrity: sha512-hJGxwPhvMuEgaLn1Kas1GvuReJ7oaHr4ukponYvbddzaQtrwsFwdk0+z96EgfOI2HI3fVVwlCSmV+bbTxZhlOw==}
     dependencies:
       '@web/dev-server': 0.1.32
       htm: 3.1.1

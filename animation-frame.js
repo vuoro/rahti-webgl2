@@ -1,4 +1,4 @@
-import { component } from "@vuoro/rahti";
+import { cleanup, component } from "@vuoro/rahti";
 
 const animationFrameSets = new Map();
 export const preRenderJobs = new Set();
@@ -24,24 +24,24 @@ export const unsubscribeFromAnimationFrame = (callback, nthFrame = 1) => {
   totalSubscribers--;
 };
 
-export const animationFrame = component(
-  function animationFrame(callback, nthFrame = 1) {
-    subscribeToAnimationFrame(callback, nthFrame);
-    callbacks.set(this, callback);
-    nthFrames.set(this, nthFrame);
-  },
-  function (isFinal) {
-    unsubscribeFromAnimationFrame(callbacks.get(this), nthFrames.get(this));
-
-    if (isFinal) {
-      callbacks.delete(this);
-      nthFrames.delete(this);
-    }
-  }
-);
+export const animationFrame = component(function animationFrame(callback, nthFrame = 1) {
+  subscribeToAnimationFrame(callback, nthFrame);
+  callbacks.set(this, callback);
+  nthFrames.set(this, nthFrame);
+  cleanup(this, cleanAnimationFrame);
+});
 
 const callbacks = new Map();
 const nthFrames = new Map();
+
+function cleanAnimationFrame(isFinal) {
+  unsubscribeFromAnimationFrame(callbacks.get(this), nthFrames.get(this));
+
+  if (isFinal) {
+    callbacks.delete(this);
+    nthFrames.delete(this);
+  }
+}
 
 export const requestPreRenderJob = (job) => {
   preRenderJobs.add(job);
