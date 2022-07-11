@@ -108,6 +108,7 @@ export const uniformBlock = component(function uniformBlock(context, uniformMap)
 
   cleanup(this, () => {
     cancelPreRenderJob(commitUpdate);
+    gl.deleteBuffer(buffer);
   });
 
   return { uniforms, update, bindIndex };

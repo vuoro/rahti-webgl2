@@ -1,5 +1,5 @@
-import { component } from "@vuoro/rahti";
-import { requestPreRenderJob } from "./animation-frame.js";
+import { cleanup, component } from "@vuoro/rahti";
+import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
 const defaultParameters = {
   TEXTURE_MIN_FILTER: "LINEAR",
@@ -68,6 +68,11 @@ export const texture = component(function texture(
 
   gl[storer](TARGET, levels, INTERNAL_FORMAT, width, height);
   if (pixels) update(pixels, 0, 0, width, height);
+
+  cleanup(this, () => {
+    cancelPreRenderJob(generateMipmaps);
+    gl.deleteTexture(texture);
+  });
 
   return { shaderType, update, index: textureIndexes.get(texture) };
 });
