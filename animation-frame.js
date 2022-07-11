@@ -16,7 +16,7 @@ export const subscribeToAnimationFrame = (callback, nthFrame = 1) => {
   set.add(callback);
   totalSubscribers++;
 
-  frame = frame || requestAnimationFrame(animationFrame);
+  frame = frame || requestAnimationFrame(runAnimationFrame);
 };
 
 export const unsubscribeFromAnimationFrame = (callback, nthFrame = 1) => {
@@ -117,7 +117,7 @@ const runAnimationFrame = (timestamp) => {
   runSets.clear();
 
   if (totalSubscribers !== 0) {
-    frame = requestAnimationFrame(animationFrame);
+    frame = requestAnimationFrame(runAnimationFrame);
   } else {
     frame = null;
   }
