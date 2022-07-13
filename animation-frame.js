@@ -86,18 +86,6 @@ const runAnimationFrame = (timestamp) => {
     }
   }
 
-  if (renderJobs.size || preRenderJobs.size) {
-    // Looks like we're going to render, so we might as well run the other sets too
-
-    for (const [, set] of animationFrameSets) {
-      if (!runSets.has(set)) {
-        for (const subscriber of set) {
-          subscriber(timestamp, sinceLastFrame, frameNumber);
-        }
-      }
-    }
-  }
-
   for (const job of preRenderJobs) {
     preRenderJobs.delete(job);
     job();
