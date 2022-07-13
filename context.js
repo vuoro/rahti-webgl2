@@ -3,11 +3,12 @@ import { cancelJobsAndStopFrame, requestRenderJob } from "./animation-frame.js";
 
 const defaultAttributes = {
   antialias: false,
+  alpha: true,
 };
 
 const defaultOptions = {
   clearColor: [0, 0, 0, 1],
-  pixelRatio: 1,
+  pixelRatio: globalThis.devicePixelRatio || 1,
   debug: false,
 };
 
