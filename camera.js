@@ -86,7 +86,7 @@ export const createCamera = component(function createCamera(
   };
 
   const updateProjection = () => {
-    if (fov !== undefined) {
+    if (fov) {
       const aspect = width / height;
       const fovInRadians = (fov * Math.PI) / 180;
       const finalFov = aspect >= 1 ? fovInRadians : fovInRadians / (0.5 + aspect / 2);
