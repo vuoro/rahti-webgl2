@@ -86,19 +86,22 @@ export const createCamera = component(function createCamera(
   };
 
   const updateProjection = () => {
+    const aspect = width / height;
+
     if (fov) {
-      const aspect = width / height;
       const fovInRadians = (fov * Math.PI) / 180;
       const finalFov = aspect >= 1 ? fovInRadians : fovInRadians / (0.5 + aspect / 2);
       perspective(projection, finalFov, aspect, near, far);
     } else {
+      const finalZoom = aspect >= 1 ? zoom : zoom / (0.5 + aspect / 2);
+
       const worldWidth = width > height ? width / height : 1;
       const worldHeight = width > height ? 1 : height / width;
 
-      const left = -worldWidth / 2 / zoom;
-      const right = worldWidth / 2 / zoom;
-      const top = worldHeight / 2 / zoom;
-      const bottom = -worldHeight / 2 / zoom;
+      const left = -worldWidth / 2 / finalZoom;
+      const right = worldWidth / 2 / finalZoom;
+      const top = worldHeight / 2 / finalZoom;
+      const bottom = -worldHeight / 2 / finalZoom;
 
       ortho(projection, left, right, bottom, top, near, far);
     }
