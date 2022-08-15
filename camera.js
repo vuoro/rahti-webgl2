@@ -1,7 +1,9 @@
 import { component, cleanup } from "@vuoro/rahti";
-import { create, perspective, ortho, lookAt, multiply, invert } from "gl-mat4-esm";
+import * as mat4 from "gl-mat4-esm";
 import { uniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
+
+const { create, perspective, ortho, lookAt, multiply, invert } = mat4;
 
 export const defaultCameraIncludes = new Set([
   // "projection",
