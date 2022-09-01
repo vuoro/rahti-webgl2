@@ -73,7 +73,8 @@ export const cancelJobsAndStopFrame = () => {
 const runSets = new Set();
 let lastTime = performance.now();
 
-const runAnimationFrame = (timestamp) => {
+const runAnimationFrame = () => {
+  const timestamp = performance.now();
   const sinceLastFrame = timestamp - lastTime;
   lastTime = timestamp;
 
