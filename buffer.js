@@ -1,7 +1,7 @@
-import { component, cleanup } from "@vuoro/rahti";
+import { CleanUp } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
-export const buffer = component(function buffer(
+export const Buffer = function (
   { gl, setBuffer, requestRendering },
   data,
   binding = "ARRAY_BUFFER",
@@ -107,14 +107,16 @@ export const buffer = component(function buffer(
   bufferObject.set = set;
   bufferObject.update = update;
 
-  cleanup(this, () => {
-    gl.deleteBuffer(buffer);
-    cancelPreRenderJob(commitUpdates);
-    cancelPreRenderJob(set);
+  this.run(CleanUp, {
+    cleaner: () => {
+      gl.deleteBuffer(buffer);
+      cancelPreRenderJob(commitUpdates);
+      cancelPreRenderJob(set);
+    },
   });
 
   return bufferObject;
-});
+};
 
 export const dataToTypes = (data) => {
   if (typeof data === "number") {

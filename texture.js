@@ -1,4 +1,4 @@
-import { cleanup, component } from "@vuoro/rahti";
+import { CleanUp } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
 const defaultParameters = {
@@ -12,7 +12,7 @@ const defaultMipParameters = {
   TEXTURE_MIN_FILTER: "NEAREST_MIPMAP_LINEAR",
 };
 
-export const texture = component(function texture(
+export const Texture = function (
   { gl, setTexture, requestRendering, textureIndexes },
   {
     shaderType = "sampler2D",
@@ -69,10 +69,12 @@ export const texture = component(function texture(
   gl[storer](TARGET, levels, INTERNAL_FORMAT, width, height);
   if (pixels) update(pixels, 0, 0, width, height);
 
-  cleanup(this, () => {
-    cancelPreRenderJob(generateMipmaps);
-    gl.deleteTexture(texture);
+  this.run(CleanUp, {
+    cleaner: () => {
+      cancelPreRenderJob(generateMipmaps);
+      gl.deleteTexture(texture);
+    },
   });
 
   return { shaderType, update, index: textureIndexes.get(texture) };
-});
+};

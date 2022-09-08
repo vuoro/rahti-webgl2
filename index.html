@@ -1,52 +1,58 @@
 <!DOCTYPE html>
 <html>
   <body>
+    <p>
+      There should be a bunch of squares that constantly get added and removed, and sometimes the
+      existing ones should change color. There should also be a grey triangle that warps to fit the
+      viewport.
+    </p>
     <canvas id="canvas" style="width: 100%; height: 100vh"></canvas>
 
     <script type="module">
-      import { state, component } from "@vuoro/rahti";
+      import { State, rahti } from "@vuoro/rahti";
       import {
-        context,
-        uniformBlock,
-        attribute,
-        elements,
-        instances,
-        command,
-        texture,
-        createCamera,
+        Context,
+        UniformBlock,
+        Attribute,
+        Elements,
+        Instances,
+        Command,
+        Texture,
+        Camera,
       } from "./main.js";
 
       // is API for resources ok?
       // and for commands?
       // write each piece of the API
 
-      const graphics = component(function () {
-        const webglContext = context(this)(document.getElementById("canvas"), undefined, {
+      const Graphics = function () {
+        const context = this.run(Context, {
+          canvas: document.getElementById("canvas"),
           debug: true,
         });
 
-        const shape = attribute(this)(webglContext, [
+        const shape = this.run(Attribute, context, [
           Float32Array.of(0, 0),
           Float32Array.of(1, 0),
           Float32Array.of(1, 1),
           Float32Array.of(0, 1),
         ]);
-        const shared = uniformBlock(this)(webglContext, { time: 0, lightColor: [0, 0, 0] });
-        const smallTexture = texture(this)(webglContext, {
+        const shared = this.run(UniformBlock, context, { time: 0, lightColor: [0, 0, 0] });
+        const smallTexture = this.run(Texture, context, {
           pixels: new Uint8Array(64 * 64 * 4).fill(128),
         });
 
-        const [cameraController, camera] = createCamera(this)(webglContext);
+        const [cameraController, camera] = this.run(Camera, context);
 
-        const triangleElements = elements(this)(webglContext, Int16Array.of(0, 1, 2));
-        const quadElements = elements(this)(webglContext, Int16Array.of(0, 1, 2, 2, 3, 0));
+        const triangleElements = this.run(Elements, context, Int16Array.of(0, 1, 2));
+        const quadElements = this.run(Elements, context, Int16Array.of(0, 1, 2, 2, 3, 0));
 
-        const quadInstance = instances(this)(webglContext, {
+        const QuadInstance = this.run(Instances, context, {
           color: [1, 1, 1],
           offset: [0, 0],
         });
 
-        const drawTriangle = command(this)(webglContext, {
+        const drawTriangle = this.run(Command, context, {
           attributes: { shape },
           textures: { smallTexture },
           // elements: triangleElements,
@@ -67,12 +73,12 @@
           `,
         });
 
-        const drawQuad = command(this)(webglContext, {
+        const drawQuad = this.run(Command, context, {
           // fragmentPrecision: `precision mediump float;`,
           attributes: { shape },
           uniformBlocks: { camera },
           elements: quadElements,
-          instances: quadInstance,
+          instances: QuadInstance,
           vertex: `
             out vec3 colorOut;
 
@@ -95,26 +101,26 @@
         // const framebufferTest = framebuffer({ color: [smallTexture] });
 
         return {
-          frame: webglContext.frame,
-          resize: webglContext.resize,
-          commands: { drawTriangle, drawQuad, clear: webglContext.clear },
-          quadInstance,
+          frame: context.frame,
+          resize: context.resize,
+          commands: { drawTriangle, drawQuad, clear: context.clear },
+          QuadInstance,
           shared,
           cameraController,
         };
-      });
+      };
 
-      const app = component(function () {
-        const [value, { increment }] = state(this)(0, getActions);
+      const App = function () {
+        const [value, { increment }] = this.run(State, { intialValue: 0, actions: getActions });
 
-        const { frame, commands, quadInstance, shared, cameraController, resize } =
-          graphics(this)();
+        const { frame, commands, QuadInstance, shared, cameraController, resize } =
+          this.run(Graphics);
         const { clear, drawTriangle, drawQuad } = commands;
 
         setTimeout(() => {
           increment();
           // resize((Math.sin(Date.now()) * 0.5 + 0.5) * globalThis.devicePixelRatio);
-        }, Math.random() * 200);
+        }, Math.random() * 500);
 
         frame(() => {
           clear();
@@ -122,17 +128,17 @@
           drawQuad();
         });
 
-        const max = 10 * (0.5 + Math.random() * 0.5);
+        const max = 20 * (0.5 + Math.random() * 0.5);
         // const max = 500;
         for (let index = 1; index < max; index++) {
-          if (Math.random() < 0.75) quad(this, index)(index, quadInstance);
+          if (Math.random() < 0.75) this.run(Quad, index, QuadInstance);
         }
 
         document.addEventListener("pointermove", ({ x, y }) => {
           cameraController.target[0] = -x * 0.001;
           cameraController.target[1] = y * 0.001;
         });
-      });
+      };
 
       const getActions = (get, set) => ({
         increment: () => {
@@ -140,17 +146,17 @@
         },
       });
 
-      const quad = component(function (index, quadInstance) {
-        const [, { increment }] = state(this)(0, getActions);
-        setTimeout(increment, Math.random() * 744);
+      const Quad = function (index, QuadInstance) {
+        const [, { increment }] = this.run(State, { intialValue: 0, actions: getActions });
+        setTimeout(increment, Math.random() * 10000);
 
-        const instance = quadInstance(this)({
+        const instance = this.run(QuadInstance, {
           offset: Float32Array.of(-index * 0.05, -index * 0.05),
           color: Float32Array.of(Math.random(), Math.random(), Math.random()),
         });
-      });
+      };
 
-      app(globalThis)();
+      rahti.run(App);
     </script>
   </body>
 </html>

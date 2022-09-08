@@ -1,8 +1,8 @@
-import { component, cleanup } from "@vuoro/rahti";
+import { CleanUp } from "@vuoro/rahti";
 
 const blank = {};
 
-export const command = component(function command(
+export const Command = function (
   { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend, debug },
   {
     // Static
@@ -137,16 +137,18 @@ ${fragment}`;
   measureCount();
 
   // Rahti cleanup
-  cleanup(this, () => {
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
-    gl.deleteProgram(program);
-    gl.deleteVertexArray(vao);
+  this.run(CleanUp, {
+    cleaner: () => {
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+      gl.deleteProgram(program);
+      gl.deleteVertexArray(vao);
 
-    for (const key in attributes) {
-      const { countSubscribers } = attributes[key];
-      countSubscribers.delete(measureCount);
-    }
+      for (const key in attributes) {
+        const { countSubscribers } = attributes[key];
+        countSubscribers.delete(measureCount);
+      }
+    },
   });
 
   // Attributes
@@ -249,7 +251,7 @@ ${fragment}`;
   };
 
   return render;
-});
+};
 
 const logError = (log, shader) => {
   const position = log.match(/(\d+:\d+)/g)[0];

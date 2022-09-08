@@ -1,6 +1,6 @@
-import { component, cleanup } from "@vuoro/rahti";
+import { CleanUp } from "@vuoro/rahti";
 import * as mat4 from "gl-mat4-esm";
-import { uniformBlock } from "./uniformBlock.js";
+import { UniformBlock } from "./uniformBlock.js";
 import { requestPreRenderJob } from "./animation-frame.js";
 
 const { create, perspective, ortho, lookAt, multiply, invert } = mat4;
@@ -22,11 +22,7 @@ export const defaultCameraIncludes = new Set([
   // "pixelRatio",
 ]);
 
-export const createCamera = component(function createCamera(
-  context,
-  props = {},
-  include = defaultCameraIncludes
-) {
+export const Camera = function (context, props = {}, include = defaultCameraIncludes) {
   const subscribers = new Set();
   const subscribe = (callback) => subscribers.add(callback);
   const unsubscribe = (callback) => subscribers.delete(callback);
@@ -64,24 +60,23 @@ export const createCamera = component(function createCamera(
     direction[2] /= distance;
   };
 
-  const uniformMap = {};
-  if (include.has("projection")) uniformMap.projection = projection;
-  if (include.has("view")) uniformMap.view = view;
-  if (include.has("projectionView")) uniformMap.projectionView = projectionView;
-  if (include.has("inverseProjectionView"))
-    uniformMap.inverseProjectionView = inverseProjectionView;
-  if (include.has("cameraPosition")) uniformMap.cameraPosition = position;
-  if (include.has("cameraTarget")) uniformMap.cameraTarget = target;
-  if (include.has("cameraDirection")) uniformMap.cameraDirection = direction;
-  if (include.has("cameraDistanceToTarget")) uniformMap.cameraDistanceToTarget = distance;
-  if (include.has("cameraUp")) uniformMap.cameraUp = up;
-  if (include.has("cameraNear")) uniformMap.cameraNear = near;
-  if (include.has("cameraFar")) uniformMap.cameraFar = far;
-  if (include.has("cameraZoom")) uniformMap.cameraZoom = zoom;
-  if (include.has("cameraFov")) uniformMap.cameraFov = fov;
-  if (include.has("pixelRatio")) uniformMap.pixelRatio = pixelRatio;
+  const uniforms = {};
+  if (include.has("projection")) uniforms.projection = projection;
+  if (include.has("view")) uniforms.view = view;
+  if (include.has("projectionView")) uniforms.projectionView = projectionView;
+  if (include.has("inverseProjectionView")) uniforms.inverseProjectionView = inverseProjectionView;
+  if (include.has("cameraPosition")) uniforms.cameraPosition = position;
+  if (include.has("cameraTarget")) uniforms.cameraTarget = target;
+  if (include.has("cameraDirection")) uniforms.cameraDirection = direction;
+  if (include.has("cameraDistanceToTarget")) uniforms.cameraDistanceToTarget = distance;
+  if (include.has("cameraUp")) uniforms.cameraUp = up;
+  if (include.has("cameraNear")) uniforms.cameraNear = near;
+  if (include.has("cameraFar")) uniforms.cameraFar = far;
+  if (include.has("cameraZoom")) uniforms.cameraZoom = zoom;
+  if (include.has("cameraFov")) uniforms.cameraFov = fov;
+  if (include.has("pixelRatio")) uniforms.pixelRatio = pixelRatio;
 
-  const block = uniformBlock(this)(context, uniformMap);
+  const block = this.run(UniformBlock, context, uniforms);
 
   const update = (key, value) => {
     if (include.has(key)) block.update(key, value);
@@ -165,8 +160,10 @@ export const createCamera = component(function createCamera(
   };
 
   context.subscribe(handleResize);
-  cleanup(this, () => {
-    context.unsubscribe(handleResize);
+  this.run(CleanUp, {
+    cleaner: () => {
+      context.unsubscribe(handleResize);
+    },
   });
 
   const proxyHandler = {
@@ -228,4 +225,4 @@ export const createCamera = component(function createCamera(
   requestPreRenderJob(updateCamera);
 
   return [camera, block];
-});
+};

@@ -1,4 +1,4 @@
-import { update, component, cleanup } from "@vuoro/rahti";
+import { update, CleanUp } from "@vuoro/rahti";
 import { cancelJobsAndStopFrame, requestRenderJob } from "./animation-frame.js";
 
 const defaultAttributes = {
@@ -6,17 +6,16 @@ const defaultAttributes = {
   alpha: true,
 };
 
-const defaultOptions = {
-  clearColor: [0, 0, 0, 1],
-  pixelRatio: globalThis.devicePixelRatio || 1,
-  debug: false,
-};
-
-export const context = component(function context(canvas, inputAttributes, options) {
+export const Context = function ({
+  canvas,
+  attributes: inputAttributes,
+  clearColor = [0, 0, 0, 1],
+  pixelRatio = globalThis.devicePixelRatio || 1,
+  debug = false,
+}) {
   if (!canvas || !(canvas instanceof Node)) throw new Error("Missing canvas");
 
   const attributes = { ...defaultAttributes, ...inputAttributes };
-  const { clearColor, pixelRatio, debug } = { ...defaultOptions, ...options };
 
   const gl = canvas.getContext("webgl2", attributes);
   const textureIndexes = new Map();
@@ -187,12 +186,14 @@ export const context = component(function context(canvas, inputAttributes, optio
   canvas.addEventListener("webglcontextlost", handleLost);
   canvas.addEventListener("webglcontextrestored", handleRestored);
 
-  cleanup(this, () => {
-    stopped = true;
-    cancelJobsAndStopFrame();
-    observer.disconnect();
-    canvas.removeEventListener("webglcontextlost", handleLost);
-    canvas.removeEventListener("webglcontextrestored", handleRestored);
+  this.run(CleanUp, {
+    cleaner: () => {
+      stopped = true;
+      cancelJobsAndStopFrame();
+      observer.disconnect();
+      canvas.removeEventListener("webglcontextlost", handleLost);
+      canvas.removeEventListener("webglcontextrestored", handleRestored);
+    },
   });
 
   let renderFunction;
@@ -230,4 +231,4 @@ export const context = component(function context(canvas, inputAttributes, optio
     requestRendering,
     debug,
   };
-});
+};

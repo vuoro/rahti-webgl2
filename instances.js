@@ -1,15 +1,15 @@
-import { cleanup, component } from "@vuoro/rahti";
+import { CleanUp } from "@vuoro/rahti";
 import { preRenderJobs, requestPreRenderJob } from "./animation-frame.js";
-import { buffer } from "./buffer.js";
+import { Buffer } from "./buffer.js";
 
-export const instances = component(function instances(context, attributeMap) {
+export const Instances = function (context, attributeMap) {
   const attributes = new Map();
 
   for (const key in attributeMap) {
     const value = attributeMap[key];
 
     const data = [value];
-    const bufferObject = buffer(this)(context, data, undefined, "DYNAMIC_DRAW");
+    const bufferObject = this.run(Buffer, context, data, undefined, "DYNAMIC_DRAW");
     const { Constructor } = bufferObject;
 
     bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
@@ -115,7 +115,7 @@ export const instances = component(function instances(context, attributeMap) {
     changes.clear();
   };
 
-  const instanceCreator = component(function instanceCreator(data) {
+  const InstanceCreator = function (data) {
     if (!instancesToSlots.has(this)) {
       additions.set(this, data);
       requestPreRenderJob(buildInstances);
@@ -156,10 +156,10 @@ export const instances = component(function instances(context, attributeMap) {
       }
     }
 
-    cleanup(this, cleanInstance);
+    this.run(CleanUp, { cleaner: cleanInstance });
 
     return this;
-  });
+  };
 
   function cleanInstance(isFinal) {
     if (isFinal) {
@@ -172,14 +172,16 @@ export const instances = component(function instances(context, attributeMap) {
     }
   }
 
-  instanceCreator.rahti_attributes = attributes;
-  instanceCreator.rahti_instances = instancesToSlots;
+  InstanceCreator.rahti_attributes = attributes;
+  InstanceCreator.rahti_instances = instancesToSlots;
 
   let dead = false;
-  cleanup(this, () => {
-    preRenderJobs.delete(buildInstances);
-    dead = true;
+  this.run(CleanUp, {
+    cleaner: () => {
+      preRenderJobs.delete(buildInstances);
+      dead = true;
+    },
   });
 
-  return instanceCreator;
-});
+  return InstanceCreator;
+};

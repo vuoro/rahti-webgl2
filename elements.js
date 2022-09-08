@@ -1,6 +1,8 @@
-import { component } from "@vuoro/rahti";
-import { buffer } from "./buffer.js";
+import { Buffer } from "./buffer.js";
 
-export const elements = component(function elements(context, data) {
-  return buffer(this)(context, data, "ELEMENT_ARRAY_BUFFER", undefined, ["UNSIGNED_SHORT", "int"]);
-});
+export const Elements = function (context, data) {
+  return this.run(Buffer, context, data, "ELEMENT_ARRAY_BUFFER", undefined, [
+    "UNSIGNED_SHORT",
+    "int",
+  ]);
+};
