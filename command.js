@@ -2,40 +2,40 @@ import { CleanUp } from "@vuoro/rahti";
 
 const blank = {};
 
-export const Command = function (
-  { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend, debug },
-  {
-    // Static
-    attributes = blank,
-    uniformBlocks = blank,
-    textures = blank,
-    instances,
-    elements,
+export const Command = function ({
+  context,
 
-    vert,
-    vertex = vert,
-    frag,
-    fragment = frag,
+  // Static
+  attributes = blank,
+  uniformBlocks = blank,
+  textures = blank,
+  instances,
+  elements,
 
-    shaderVersion = "#version 300 es",
-    vertexPrecision = ``,
-    fragmentPrecision = `precision mediump float;`,
+  vert,
+  vertex = vert,
+  frag,
+  fragment = frag,
 
-    // Can be overridden at runtime
-    mode = "TRIANGLES",
-    depth = "LESS",
-    cull = "BACK",
-    blend = null,
+  shaderVersion = "#version 300 es",
+  vertexPrecision = ``,
+  fragmentPrecision = `precision mediump float;`,
 
-    // Runtime-only overrides
-    // count: overrideCount,
-    // instanceCount: overrideInstanceCount,
+  // Can be overridden at runtime
+  mode = "TRIANGLES",
+  depth = "LESS",
+  cull = "BACK",
+  blend = null,
 
-    // Later
-    // target, https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/framebufferTexture2D
-    // attachments, https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_draw_buffers
-  }
-) {
+  // Runtime-only overrides
+  // count: overrideCount,
+  // instanceCount: overrideInstanceCount,
+
+  // Later
+  // target, https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/framebufferTexture2D
+  // attachments, https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_draw_buffers
+}) {
+  const { gl, setBuffer, setProgram, setVao, setDepth, setCull, setBlend, debug } = context;
   if (!vertex || !fragment) throw new Error("missing vertex or fragment shader");
   if (attributes === blank) throw new Error("missing at least one attribute");
 

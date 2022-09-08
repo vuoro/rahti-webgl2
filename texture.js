@@ -12,27 +12,27 @@ const defaultMipParameters = {
   TEXTURE_MIN_FILTER: "NEAREST_MIPMAP_LINEAR",
 };
 
-export const Texture = function (
-  { gl, setTexture, requestRendering, textureIndexes },
-  {
-    shaderType = "sampler2D",
-    target = "TEXTURE_2D",
-    storer = "texStorage2D",
-    updater = "texSubImage2D",
-    levels = 1,
-    format = "RGBA",
-    internalFormat = "RGBA4",
-    type = "UNSIGNED_BYTE",
-    pixels = null,
-    width = 64,
-    height = 64,
-    mipmaps = false,
-    flipY = false,
-    premultiplyAlpha = false,
-    unpackAlignment,
-    parameters = mipmaps ? defaultMipParameters : defaultParameters,
-  } = {}
-) {
+export const Texture = function ({
+  context,
+  shaderType = "sampler2D",
+  target = "TEXTURE_2D",
+  storer = "texStorage2D",
+  updater = "texSubImage2D",
+  levels = 1,
+  format = "RGBA",
+  internalFormat = "RGBA4",
+  type = "UNSIGNED_BYTE",
+  pixels = null,
+  width = 64,
+  height = 64,
+  mipmaps = false,
+  flipY = false,
+  premultiplyAlpha = false,
+  unpackAlignment,
+  parameters = mipmaps ? defaultMipParameters : defaultParameters,
+}) {
+  const { gl, setTexture, requestRendering, textureIndexes } = context;
+
   const TARGET = gl[target];
   const FORMAT = gl[format];
   const INTERNAL_FORMAT = gl[internalFormat];

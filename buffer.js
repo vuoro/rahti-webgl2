@@ -1,13 +1,14 @@
 import { CleanUp } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 
-export const Buffer = function (
-  { gl, setBuffer, requestRendering },
+export const Buffer = function ({
+  context,
   data,
   binding = "ARRAY_BUFFER",
   usage = "STATIC_DRAW",
-  types = dataToTypes(data[0])
-) {
+  types = dataToTypes(data[0]),
+}) {
+  const { gl, setBuffer, requestRendering } = context;
   const BINDING = gl[binding];
 
   const [bufferType, shaderType] = types;

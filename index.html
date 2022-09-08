@@ -4,7 +4,7 @@
     <p>
       There should be a bunch of squares that constantly get added and removed, and sometimes the
       existing ones should change color. There should also be a grey triangle that warps to fit the
-      viewport.
+      viewport, and slowly gets filled with random colors.
     </p>
     <canvas id="canvas" style="width: 100%; height: 100vh"></canvas>
 
@@ -19,6 +19,7 @@
         Command,
         Texture,
         Camera,
+        AnimationFrame,
       } from "./main.js";
 
       // is API for resources ok?
@@ -31,28 +32,39 @@
           debug: true,
         });
 
-        const shape = this.run(Attribute, context, [
-          Float32Array.of(0, 0),
-          Float32Array.of(1, 0),
-          Float32Array.of(1, 1),
-          Float32Array.of(0, 1),
-        ]);
-        const shared = this.run(UniformBlock, context, { time: 0, lightColor: [0, 0, 0] });
-        const smallTexture = this.run(Texture, context, {
+        const shape = this.run(Attribute, {
+          context,
+          data: [
+            Float32Array.of(0, 0),
+            Float32Array.of(1, 0),
+            Float32Array.of(1, 1),
+            Float32Array.of(0, 1),
+          ],
+        });
+        const shared = this.run(UniformBlock, {
+          context,
+          uniforms: { time: 0, lightColor: [0, 0, 0] },
+        });
+        const smallTexture = this.run(Texture, {
+          context,
           pixels: new Uint8Array(64 * 64 * 4).fill(128),
         });
 
-        const [cameraController, camera] = this.run(Camera, context);
+        const [cameraController, camera] = this.run(Camera, { context });
 
-        const triangleElements = this.run(Elements, context, Int16Array.of(0, 1, 2));
-        const quadElements = this.run(Elements, context, Int16Array.of(0, 1, 2, 2, 3, 0));
+        const triangleElements = this.run(Elements, { context, data: Int16Array.of(0, 1, 2) });
+        const quadElements = this.run(Elements, { context, data: Int16Array.of(0, 1, 2, 2, 3, 0) });
 
-        const QuadInstance = this.run(Instances, context, {
-          color: [1, 1, 1],
-          offset: [0, 0],
+        const QuadInstance = this.run(Instances, {
+          context,
+          attributes: {
+            color: [1, 1, 1],
+            offset: [0, 0],
+          },
         });
 
-        const drawTriangle = this.run(Command, context, {
+        const drawTriangle = this.run(Command, {
+          context,
           attributes: { shape },
           textures: { smallTexture },
           // elements: triangleElements,
@@ -73,7 +85,8 @@
           `,
         });
 
-        const drawQuad = this.run(Command, context, {
+        const drawQuad = this.run(Command, {
+          context,
           // fragmentPrecision: `precision mediump float;`,
           attributes: { shape },
           uniformBlocks: { camera },
@@ -99,6 +112,17 @@
 
         // Later
         // const framebufferTest = framebuffer({ color: [smallTexture] });
+
+        this.run(AnimationFrame, {
+          onFrame: () => {
+            smallTexture.update(
+              Uint8Array.of(Math.random() * 255, Math.random() * 255, Math.random() * 255, 255),
+              Math.random() * 64,
+              Math.random() * 64
+            );
+          },
+          nthFrame: 30,
+        });
 
         return {
           frame: context.frame,
@@ -131,7 +155,7 @@
         const max = 20 * (0.5 + Math.random() * 0.5);
         // const max = 500;
         for (let index = 1; index < max; index++) {
-          if (Math.random() < 0.75) this.run(Quad, index, QuadInstance);
+          if (Math.random() < 0.75) this.run(Quad, null, index, QuadInstance);
         }
 
         document.addEventListener("pointermove", ({ x, y }) => {
@@ -146,11 +170,11 @@
         },
       });
 
-      const Quad = function (index, QuadInstance) {
+      const Quad = function (props, index, QuadInstance) {
         const [, { increment }] = this.run(State, { intialValue: 0, actions: getActions });
         setTimeout(increment, Math.random() * 10000);
 
-        const instance = this.run(QuadInstance, {
+        const instance = this.run(QuadInstance, null, {
           offset: Float32Array.of(-index * 0.05, -index * 0.05),
           color: Float32Array.of(Math.random(), Math.random(), Math.random()),
         });

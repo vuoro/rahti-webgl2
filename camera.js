@@ -22,12 +22,20 @@ export const defaultCameraIncludes = new Set([
   // "pixelRatio",
 ]);
 
-export const Camera = function (context, props = {}, include = defaultCameraIncludes) {
+export const Camera = function ({
+  context,
+  fov = 60,
+  near = 0.1,
+  far = 1000,
+  zoom = 1,
+  position: inputPosition = [0, 0, 2],
+  target: inputTarget = [0, 0, 0],
+  up: inputUp = [0, 0, 1],
+  include = defaultCameraIncludes,
+}) {
   const subscribers = new Set();
   const subscribe = (callback) => subscribers.add(callback);
   const unsubscribe = (callback) => subscribers.delete(callback);
-
-  let { fov = 60, near = 0.1, far = 1000, zoom = 1 } = props;
 
   let width = context?.gl?.drawingBufferWidth || 1;
   let height = context?.gl?.drawingBufferHeight || 1;
@@ -39,9 +47,9 @@ export const Camera = function (context, props = {}, include = defaultCameraIncl
   const projectionView = create();
   const inverseProjectionView = create();
 
-  const position = Float32Array.from(props.position || [0, 0, 2]);
-  const target = Float32Array.from(props.target || [0, 0, 0]);
-  const up = Float32Array.from(props.up || [0, 0, 1]);
+  const position = Float32Array.from(inputPosition);
+  const target = Float32Array.from(inputTarget);
+  const up = Float32Array.from(inputUp);
 
   const direction = Float32Array.from([0, 0, -1]);
   let distance = 1;
@@ -76,7 +84,7 @@ export const Camera = function (context, props = {}, include = defaultCameraIncl
   if (include.has("cameraFov")) uniforms.cameraFov = fov;
   if (include.has("pixelRatio")) uniforms.pixelRatio = pixelRatio;
 
-  const block = this.run(UniformBlock, context, uniforms);
+  const block = this.run(UniformBlock, { context, uniforms });
 
   const update = (key, value) => {
     if (include.has(key)) block.update(key, value);

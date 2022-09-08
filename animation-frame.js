@@ -24,9 +24,9 @@ export const unsubscribeFromAnimationFrame = (callback, nthFrame = 1) => {
   totalSubscribers--;
 };
 
-export const AnimationFrame = function (callback, nthFrame = 1) {
-  subscribeToAnimationFrame(callback, nthFrame);
-  callbacks.set(this, callback);
+export const AnimationFrame = function ({ onFrame, nthFrame = 1 }) {
+  subscribeToAnimationFrame(onFrame, nthFrame);
+  callbacks.set(this, onFrame);
   nthFrames.set(this, nthFrame);
   this.run(CleanUp, { cleaner: cleanAnimationFrame });
 };

@@ -2,14 +2,14 @@ import { CleanUp } from "@vuoro/rahti";
 import { preRenderJobs, requestPreRenderJob } from "./animation-frame.js";
 import { Buffer } from "./buffer.js";
 
-export const Instances = function (context, attributeMap) {
+export const Instances = function ({ context, attributes: attributeMap }) {
   const attributes = new Map();
 
   for (const key in attributeMap) {
     const value = attributeMap[key];
 
     const data = [value];
-    const bufferObject = this.run(Buffer, context, data, undefined, "DYNAMIC_DRAW");
+    const bufferObject = this.run(Buffer, { context, data, usage: "DYNAMIC_DRAW" });
     const { Constructor } = bufferObject;
 
     bufferObject.defaultValue = value.length ? new Constructor(value) : new Constructor(data);
@@ -115,7 +115,7 @@ export const Instances = function (context, attributeMap) {
     changes.clear();
   };
 
-  const InstanceCreator = function (data) {
+  const InstanceCreator = function (props, data) {
     if (!instancesToSlots.has(this)) {
       additions.set(this, data);
       requestPreRenderJob(buildInstances);

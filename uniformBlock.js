@@ -2,7 +2,7 @@ import { CleanUp } from "@vuoro/rahti";
 import { cancelPreRenderJob, requestPreRenderJob } from "./animation-frame.js";
 import { dataToTypes } from "./buffer.js";
 
-export const UniformBlock = function (context, uniformMap) {
+export const UniformBlock = function ({ context, uniforms: uniformMap }) {
   const { gl, setBuffer, requestRendering } = context;
 
   const offsets = new Map();
