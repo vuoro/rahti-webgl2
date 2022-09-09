@@ -116,57 +116,56 @@ export const Instances = function ({ context, attributes: attributeMap }) {
   };
 
   const InstanceCreator = function (props, data) {
-    if (!instancesToSlots.has(this)) {
-      additions.set(this, data);
+    const { id } = this;
+    const isNew = !instancesToSlots.has(id);
+
+    if (isNew) {
+      additions.set(id, data);
       requestPreRenderJob(buildInstances);
-    }
+    } else if (data) {
+      datas.set(id, data);
 
-    if (data) {
-      if (instancesToSlots.has(this)) {
-        // Trigger updates on re-renders
-        datas.set(this, data);
+      const isMap = data instanceof Map;
+      const isObject = data instanceof Object;
 
-        const isMap = data instanceof Map;
-        const isObject = data instanceof Object;
+      for (const [key, { dimensions, update, defaultValue, allData }] of attributes) {
+        const value = isMap
+          ? data.has(key)
+            ? data.get(key)
+            : defaultValue
+          : isObject && key in data
+          ? data[key]
+          : defaultValue;
 
-        for (const [key, { dimensions, update, defaultValue, allData }] of attributes) {
-          const value = isMap
-            ? data.has(key)
-              ? data.get(key)
-              : defaultValue
-            : isObject && key in data
-            ? data[key]
-            : defaultValue;
+        const offset = dimensions * instancesToSlots.get(id);
 
-          const offset = dimensions * instancesToSlots.get(this);
+        let hasChanged = false;
 
-          let hasChanged = false;
-
-          if (dimensions === 1) {
-            hasChanged = allData[offset] !== value;
-          } else {
-            for (let index = 0; index < dimensions; index++) {
-              hasChanged = allData[offset + index] !== value[index];
-              if (hasChanged) break;
-            }
+        if (dimensions === 1) {
+          hasChanged = allData[offset] !== value;
+        } else {
+          for (let index = 0; index < dimensions; index++) {
+            hasChanged = allData[offset + index] !== value[index];
+            if (hasChanged) break;
           }
-
-          if (hasChanged) update(value, offset);
         }
+
+        if (hasChanged) update(value, offset);
       }
     }
 
     this.run(CleanUp, { cleaner: cleanInstance });
 
-    return this;
+    return id;
   };
 
   function cleanInstance(isFinal) {
     if (isFinal) {
-      if (additions.has(this)) {
-        additions.delete(this);
+      const { id } = this;
+      if (additions.has(id)) {
+        additions.delete(id);
       } else if (!dead) {
-        deletions.add(this);
+        deletions.add(id);
         requestPreRenderJob(buildInstances);
       }
     }

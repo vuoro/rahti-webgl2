@@ -1,6 +1,6 @@
 {
   "name": "@vuoro/rahti-webgl2",
-  "version": "9.0.1",
+  "version": "9.0.2",
   "description": "WebGL2 effects for Rahti",
   "main": "main.js",
   "type": "module",
