@@ -1,4 +1,4 @@
-import { CleanUp } from "@vuoro/rahti";
+import { CleanUp, updateParent } from "@vuoro/rahti";
 
 const animationFrameSets = new Map();
 export const preRenderJobs = new Set();
@@ -8,38 +8,48 @@ let frameNumber = 0;
 let totalSubscribers = 0;
 let frame = null;
 
-export const subscribeToAnimationFrame = (callback, nthFrame = 1) => {
-  if (!animationFrameSets.has(nthFrame)) {
-    animationFrameSets.set(nthFrame, new Set());
+const subscribers = new Set();
+
+export const subscribeToAnimationFrame = (callback) => {
+  if (!subscribers.has(callback)) {
+    subscribers.add(callback);
+    totalSubscribers++;
+    frame = frame || requestAnimationFrame(runAnimationFrame);
   }
-  const set = animationFrameSets.get(nthFrame);
-  set.add(callback);
-  totalSubscribers++;
-
-  frame = frame || requestAnimationFrame(runAnimationFrame);
 };
 
-export const unsubscribeFromAnimationFrame = (callback, nthFrame = 1) => {
-  animationFrameSets.get(nthFrame).delete(callback);
-  totalSubscribers--;
+export const unsubscribeFromAnimationFrame = (callback) => {
+  if (subscribers.has(callback)) {
+    subscribers.delete(callback);
+    totalSubscribers--;
+  }
 };
 
-export const AnimationFrame = function ({ onFrame, nthFrame = 1 }) {
-  subscribeToAnimationFrame(onFrame, nthFrame);
-  callbacks.set(this, onFrame);
-  nthFrames.set(this, nthFrame);
+const componentSubscribers = new Set();
+
+const componentProps = {};
+const runComponents = (timestamp, sinceLastFrame, frameNumber) => {
+  componentProps.timestamp = timestamp;
+  componentProps.sinceLastFrame = sinceLastFrame;
+  componentProps.frameNumber = frameNumber;
+
+  for (const id of componentSubscribers) {
+    updateParent(id);
+  }
+};
+
+export const AnimationFrame = function () {
+  componentSubscribers.add(this.id);
   this.run(CleanUp, { cleaner: cleanAnimationFrame });
-};
+  subscribeToAnimationFrame(runComponents);
 
-const callbacks = new Map();
-const nthFrames = new Map();
+  return componentProps;
+};
 
 function cleanAnimationFrame(isFinal) {
-  unsubscribeFromAnimationFrame(callbacks.get(this), nthFrames.get(this));
-
   if (isFinal) {
-    callbacks.delete(this);
-    nthFrames.delete(this);
+    componentSubscribers.delete(this.id);
+    if (componentSubscribers.size === 0) unsubscribeFromAnimationFrame(runComponents);
   }
 }
 
@@ -70,20 +80,14 @@ export const cancelJobsAndStopFrame = () => {
   postRenderJobs.clear();
 };
 
-const runSets = new Set();
 let lastTime = performance.now();
 
 const runAnimationFrame = (timestamp) => {
   const sinceLastFrame = timestamp - lastTime;
   lastTime = timestamp;
 
-  for (const [nthFrame, set] of animationFrameSets) {
-    if (frameNumber % nthFrame === 0) {
-      for (const subscriber of set) {
-        subscriber(timestamp, sinceLastFrame, frameNumber);
-      }
-      runSets.add(set);
-    }
+  for (const callback of subscribers) {
+    callback(timestamp, sinceLastFrame, frameNumber);
   }
 
   for (const job of preRenderJobs) {
@@ -102,7 +106,6 @@ const runAnimationFrame = (timestamp) => {
   }
 
   frameNumber++;
-  runSets.clear();
 
   if (totalSubscribers !== 0) {
     frame = requestAnimationFrame(runAnimationFrame);

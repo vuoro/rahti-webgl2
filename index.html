@@ -113,16 +113,7 @@
         // Later
         // const framebufferTest = framebuffer({ color: [smallTexture] });
 
-        this.run(AnimationFrame, {
-          onFrame: () => {
-            smallTexture.update(
-              Uint8Array.of(Math.random() * 255, Math.random() * 255, Math.random() * 255, 255),
-              Math.random() * 64,
-              Math.random() * 64
-            );
-          },
-          nthFrame: 30,
-        });
+        this.run(TriangleUpdater, null, smallTexture);
 
         return {
           frame: context.frame,
@@ -132,6 +123,17 @@
           shared,
           cameraController,
         };
+      };
+
+      const TriangleUpdater = function (props, smallTexture) {
+        const { frameNumber } = this.run(AnimationFrame);
+
+        if (frameNumber % 16 === 0)
+          smallTexture.update(
+            Uint8Array.of(Math.random() * 255, Math.random() * 255, Math.random() * 255, 255),
+            Math.random() * 64,
+            Math.random() * 64
+          );
       };
 
       const App = function () {
@@ -176,7 +178,11 @@
 
         const instance = this.run(QuadInstance, null, {
           offset: Float32Array.of(-index * 0.05, -index * 0.05),
-          color: Float32Array.of(Math.random(), Math.random(), Math.random()),
+          color: Float32Array.of(
+            Math.random() * 0.236,
+            Math.random() * 0.236,
+            Math.random() * 0.236
+          ),
         });
       };
 
