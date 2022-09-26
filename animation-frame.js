@@ -27,7 +27,7 @@ export const unsubscribeFromAnimationFrame = (callback) => {
 
 const componentSubscribers = new Set();
 
-const componentProps = {};
+const componentProps = { timestamp: performance.now(), sinceLastFrame: 1, frameNumber: 0 };
 const runComponents = (timestamp, sinceLastFrame, frameNumber) => {
   componentProps.timestamp = timestamp;
   componentProps.sinceLastFrame = sinceLastFrame;
