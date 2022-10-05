@@ -209,24 +209,32 @@ export const Camera = function ({
     },
 
     set fov(input) {
-      fov = input;
-      projectionNeedsUpdate = true;
-      requestPreRenderJob(updateCamera);
+      if (input !== fov) {
+        fov = input;
+        projectionNeedsUpdate = true;
+        requestPreRenderJob(updateCamera);
+      }
     },
     set near(input) {
-      near = input;
-      projectionNeedsUpdate = true;
-      requestPreRenderJob(updateCamera);
+      if (input !== near) {
+        near = input;
+        projectionNeedsUpdate = true;
+        requestPreRenderJob(updateCamera);
+      }
     },
     set far(input) {
-      far = input;
-      projectionNeedsUpdate = true;
-      requestPreRenderJob(updateCamera);
+      if (input !== far) {
+        far = input;
+        projectionNeedsUpdate = true;
+        requestPreRenderJob(updateCamera);
+      }
     },
     set zoom(input) {
-      zoom = input;
-      projectionNeedsUpdate = true;
-      requestPreRenderJob(updateCamera);
+      if (input !== zoom) {
+        zoom = input;
+        projectionNeedsUpdate = true;
+        requestPreRenderJob(updateCamera);
+      }
     },
   };
 
