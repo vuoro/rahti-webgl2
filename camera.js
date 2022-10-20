@@ -184,6 +184,9 @@ export const Camera = function ({
 
       return true;
     },
+    get(target, prop) {
+      return target[prop];
+    },
   };
 
   const camera = {
