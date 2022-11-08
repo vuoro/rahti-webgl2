@@ -19,6 +19,7 @@ export const defaultCameraIncludes = new Set([
   // "cameraFar",
   // "cameraZoom",
   // "cameraFov",
+  // "aspectRatio",
   // "pixelRatio",
 ]);
 
@@ -39,6 +40,7 @@ export const Camera = function ({
 
   let width = context?.gl?.drawingBufferWidth || 1;
   let height = context?.gl?.drawingBufferHeight || 1;
+  let aspectRatio = width / height;
   let pixelRatio = globalThis.devicePixelRatio || 1;
   let projectionNeedsUpdate = true;
 
@@ -82,6 +84,7 @@ export const Camera = function ({
   if (include.has("cameraFar")) uniforms.cameraFar = far;
   if (include.has("cameraZoom")) uniforms.cameraZoom = zoom;
   if (include.has("cameraFov")) uniforms.cameraFov = fov;
+  if (include.has("aspectRatio")) uniforms.aspectRatio = aspectRatio;
   if (include.has("pixelRatio")) uniforms.pixelRatio = pixelRatio;
 
   const block = this.run(UniformBlock, { context, uniforms });
@@ -91,14 +94,14 @@ export const Camera = function ({
   };
 
   const updateProjection = () => {
-    const aspect = width / height;
+    aspectRatio = width / height;
 
     if (fov) {
       const fovInRadians = (fov * Math.PI) / 180;
-      const finalFov = aspect >= 1 ? fovInRadians : fovInRadians / (0.5 + aspect / 2);
-      perspective(projection, finalFov, aspect, near, far);
+      const finalFov = aspectRatio >= 1 ? fovInRadians : fovInRadians / (0.5 + aspectRatio / 2);
+      perspective(projection, finalFov, aspectRatio, near, far);
     } else {
-      const finalZoom = aspect >= 1 ? zoom : zoom / (0.5 + aspect / 2);
+      const finalZoom = aspectRatio >= 1 ? zoom : zoom / (0.5 + aspectRatio / 2);
 
       const worldWidth = width > height ? width / height : 1;
       const worldHeight = width > height ? 1 : height / width;
@@ -116,6 +119,7 @@ export const Camera = function ({
     update("cameraFar", far);
     update("cameraZoom", zoom);
     update("cameraFov", fov);
+    update("aspectRatio", aspectRatio);
   };
 
   const updateView = () => {
