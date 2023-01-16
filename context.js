@@ -12,12 +12,16 @@ export const Context = function ({
   clearColor = [0, 0, 0, 1],
   pixelRatio = globalThis.devicePixelRatio || 1,
   debug = false,
+  drawingBufferColorSpace = "display-p3",
+  unpackColorSpace = drawingBufferColorSpace,
 }) {
   if (!canvas || !(canvas instanceof Node)) throw new Error("Missing canvas");
 
   const attributes = { ...defaultAttributes, ...inputAttributes };
 
   const gl = canvas.getContext("webgl2", attributes);
+  if ("drawingBufferColorSpace" in gl) gl.drawingBufferColorSpace = drawingBufferColorSpace;
+  if ("unpackColorSpace" in gl) gl.unpackColorSpace = unpackColorSpace;
   const textureIndexes = new Map();
 
   // Caches and setters
@@ -128,7 +132,7 @@ export const Context = function ({
   const cssWidth = canvas.style.getPropertyValue("width");
   if (!cssWidth) {
     console.warn(
-      "Canvas doesn't seem to have a set CSS width. It needs one to make rahti-webgl2's ResizeObserver work properly. It will now be set to `width: 100%`."
+      "Canvas doesn't seem to have a set CSS width. It needs one to make rahti-webgl2's ResizeObserver work properly. It will now be set to `width: 100%`.",
     );
     canvas.style.setProperty("width", "100%");
   }
