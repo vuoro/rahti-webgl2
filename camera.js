@@ -194,7 +194,25 @@ export const Camera = function ({
     position: new Proxy(position, proxyHandler),
     target: new Proxy(target, proxyHandler),
     up: new Proxy(up, proxyHandler),
+
+    projection,
+    view,
+    projectionView,
+    inverseProjectionView,
     direction,
+
+    get width() {
+      return width;
+    },
+    get height() {
+      return height;
+    },
+    get aspectRatio() {
+      return aspectRatio;
+    },
+    get pixelRatio() {
+      return aspectRatio;
+    },
 
     subscribe,
     unsubscribe,
