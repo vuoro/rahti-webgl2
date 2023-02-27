@@ -98,18 +98,15 @@ export const Camera = function ({
 
     if (fov) {
       const fovInRadians = (fov * Math.PI) / 180;
-      const finalFov = aspectRatio >= 1 ? fovInRadians : fovInRadians / (0.5 + aspectRatio / 2);
-      perspective(projection, finalFov, aspectRatio, near, far);
+      perspective(projection, fovInRadians, aspectRatio, near, far);
     } else {
-      const finalZoom = aspectRatio >= 1 ? zoom : zoom / (0.5 + aspectRatio / 2);
-
       const worldWidth = width > height ? width / height : 1;
       const worldHeight = width > height ? 1 : height / width;
 
-      const left = -worldWidth / 2 / finalZoom;
-      const right = worldWidth / 2 / finalZoom;
-      const top = worldHeight / 2 / finalZoom;
-      const bottom = -worldHeight / 2 / finalZoom;
+      const left = -worldWidth / 2 / zoom;
+      const right = worldWidth / 2 / zoom;
+      const top = worldHeight / 2 / zoom;
+      const bottom = -worldHeight / 2 / zoom;
 
       ortho(projection, left, right, bottom, top, near, far);
     }
