@@ -59,9 +59,9 @@ export const Texture = function ({
     gl.generateMipmap(TARGET);
   };
 
-  const update = (data, x = 0, y = 0, width = 1, height = 1, dataOffset, level = 0) => {
+  const update = (data, x = 0, y = 0, width = 1, height = 1, level = 0) => {
     setTexture(texture, TARGET);
-    gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data, dataOffset);
+    gl[updater](TARGET, level, x, y, width, height, FORMAT, TYPE, data);
     if (hasMipmaps) requestPreRenderJob(generateMipmaps);
     requestRendering();
   };
