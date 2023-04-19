@@ -128,15 +128,6 @@ export const Context = function ({
     gl.clear(value);
   };
 
-  // Without a set width, the ResizeObserver will end up in an infinite loop
-  const cssWidth = canvas.style.getPropertyValue("width");
-  if (!cssWidth) {
-    console.warn(
-      "Canvas doesn't seem to have a set CSS width. It needs one to make rahti-webgl2's ResizeObserver work properly. It will now be set to `width: 100%`.",
-    );
-    canvas.style.setProperty("width", "100%");
-  }
-
   let currentPixelRatio = pixelRatio;
   let width = canvas.offsetWidth;
   let height = canvas.offsetHeight;
