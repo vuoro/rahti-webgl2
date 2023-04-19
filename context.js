@@ -10,7 +10,7 @@ export const Context = function ({
   canvas,
   attributes: inputAttributes,
   clearColor = [0, 0, 0, 1],
-  pixelRatio = globalThis.devicePixelRatio || 1,
+  pixelRatio = 1,
   debug = false,
   drawingBufferColorSpace = "display-p3",
   unpackColorSpace = drawingBufferColorSpace,
@@ -140,11 +140,19 @@ export const Context = function ({
   const unsubscribe = (subscriber) => resizeSubscribers.delete(subscriber);
 
   const observer = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      width = entry.contentBoxSize?.[0]?.inlineSize || entry.width || width;
-      height = entry.contentBoxSize?.[0]?.blockSize || entry.height || height;
-      resize(currentPixelRatio);
+    const entry = entries[0];
+    
+    if (entry.devicePixelContentBoxSize) {
+      width = entry.devicePixelContentBoxSize[0].inlineSize;
+      height = entry.devicePixelContentBoxSize[0].blockSize;
+    } else if (entry.contentBoxSize) {
+      // fallback for Safari that will not always be correct
+      const devicePixelRatio = globalThis.devicePixelRatio || 1;
+      width = Math.round(entry.contentBoxSize[0].inlineSize * devicePixelRatio);
+      height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
     }
+
+    resize();
   });
 
   const resize = (pixelRatio = currentPixelRatio) => {
