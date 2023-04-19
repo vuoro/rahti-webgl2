@@ -139,22 +139,6 @@ export const Context = function ({
   };
   const unsubscribe = (subscriber) => resizeSubscribers.delete(subscriber);
 
-  const observer = new ResizeObserver((entries) => {
-    const entry = entries[0];
-
-    if (entry.devicePixelContentBoxSize) {
-      width = entry.devicePixelContentBoxSize[0].inlineSize;
-      height = entry.devicePixelContentBoxSize[0].blockSize;
-    } else if (entry.contentBoxSize) {
-      // fallback for Safari that will not always be correct
-      const devicePixelRatio = globalThis.devicePixelRatio || 1;
-      width = Math.round(entry.contentBoxSize[0].inlineSize * devicePixelRatio);
-      height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
-    }
-
-    resize();
-  });
-
   const resize = (pixelRatio = currentPixelRatio) => {
     currentPixelRatio = pixelRatio;
 
@@ -169,11 +153,32 @@ export const Context = function ({
     requestRendering();
   };
 
+  const handleResize = () => resize();
+
+  const observer = new ResizeObserver((entries) => {
+    const entry = entries[0];
+
+    if (entry.devicePixelContentBoxSize) {
+      width = entry.devicePixelContentBoxSize[0].inlineSize;
+      height = entry.devicePixelContentBoxSize[0].blockSize;
+    } else if (entry.contentBoxSize) {
+      // Annoying fallback for Safari: probably not always accurate
+      const devicePixelRatio = window.devicePixelRatio / (window.innerWidth / window.outerWidth);
+      width = Math.round(entry.contentBoxSize[0].inlineSize * devicePixelRatio);
+      height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
+    }
+
+    handleResize();
+  });
+
   try {
     observer.observe(canvas, { box: "device-pixel-content-box" });
   } catch {
     observer.observe(canvas);
   }
+
+  // Fallback for when something like the zoom level changes, but doesn't trigger ResizeObservers
+  window.addEventListener("resize", handleResize);
 
   const handleLost = (event) => {
     console.log("context lost");
@@ -194,6 +199,7 @@ export const Context = function ({
       stopped = true;
       cancelJobsAndStopFrame();
       observer.disconnect();
+      window.removeEventListener("resize", handleResize);
       canvas.removeEventListener("webglcontextlost", handleLost);
       canvas.removeEventListener("webglcontextrestored", handleRestored);
     },
