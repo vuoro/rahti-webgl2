@@ -153,8 +153,6 @@ export const Context = function ({
     requestRendering();
   };
 
-  const handleResize = () => resize();
-
   const observer = new ResizeObserver((entries) => {
     const entry = entries[0];
 
@@ -168,7 +166,7 @@ export const Context = function ({
       height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
     }
 
-    handleResize();
+    resize();
   });
 
   try {
@@ -176,9 +174,6 @@ export const Context = function ({
   } catch {
     observer.observe(canvas);
   }
-
-  // Fallback for when something like the zoom level changes, but doesn't trigger ResizeObservers
-  window.addEventListener("resize", handleResize);
 
   const handleLost = (event) => {
     console.log("context lost");
@@ -199,7 +194,6 @@ export const Context = function ({
       stopped = true;
       cancelJobsAndStopFrame();
       observer.disconnect();
-      window.removeEventListener("resize", handleResize);
       canvas.removeEventListener("webglcontextlost", handleLost);
       canvas.removeEventListener("webglcontextrestored", handleRestored);
     },
