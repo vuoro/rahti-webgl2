@@ -237,7 +237,7 @@ ${fragment}`;
     overrideCull = cull,
     overrideBlend = blend,
     overrideCount = usesElements ? elements.count : count,
-    overrideInstanceCount = isInstanced && instanceList.size
+    overrideInstanceCount = isInstanced && instanceList.size,
   ) => {
     if (isInstanced && !overrideInstanceCount) return;
 
@@ -254,12 +254,14 @@ ${fragment}`;
 };
 
 const logError = (log, shader) => {
+  console.error(log);
+
   const position = log.match(/(\d+:\d+)/g)[0];
   if (position) {
     const [, lineNumber] = position.split(":");
     let lineIndex = 1;
     for (const line of shader.split("\n")) {
-      if (Math.abs(lineIndex - lineNumber) < 8) {
+      if (Math.abs(lineIndex - lineNumber) < 5) {
         console[lineIndex === +lineNumber ? "warn" : "log"](`${lineIndex} ${line}`);
       }
       lineIndex++;
