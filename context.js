@@ -141,7 +141,7 @@ export const Context = function ({
 
   const observer = new ResizeObserver((entries) => {
     const entry = entries[0];
-    
+
     if (entry.devicePixelContentBoxSize) {
       width = entry.devicePixelContentBoxSize[0].inlineSize;
       height = entry.devicePixelContentBoxSize[0].blockSize;

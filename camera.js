@@ -85,7 +85,7 @@ export const Camera = function ({
   if (include.has("cameraZoom")) uniforms.cameraZoom = zoom;
   if (include.has("cameraFov")) uniforms.cameraFov = fov;
   if (include.has("aspectRatio")) uniforms.aspectRatio = aspectRatio;
-  if (include.has("pixelRatio")) uniforms.pixelRatio = pixelRatio;
+  if (include.has("pixelRatio")) uniforms.pixelRatio = pixelRatio * window.devicePixelRatio;
 
   const block = this.run(UniformBlock, { context, uniforms });
 
@@ -152,7 +152,7 @@ export const Camera = function ({
   };
 
   const updateDevicePixelRatio = () => {
-    update("pixelRatio", pixelRatio);
+    update("pixelRatio", pixelRatio * window.devicePixelRatio);
   };
 
   const handleResize = (_, __, renderWidth, renderHeight, ratio) => {
