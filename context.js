@@ -160,10 +160,15 @@ export const Context = function ({
       width = entry.devicePixelContentBoxSize[0].inlineSize;
       height = entry.devicePixelContentBoxSize[0].blockSize;
     } else if (entry.contentBoxSize) {
-      // Annoying fallback for Safari: probably not always accurate
-      const devicePixelRatio = window.devicePixelRatio / (window.innerWidth / window.outerWidth);
-      width = Math.round(entry.contentBoxSize[0].inlineSize * devicePixelRatio);
-      height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
+      // Annoying fallback. Assumes window.devicePixelRatio includes browser zoom.
+      // Currently that's how it works in Chrome, but not in Safari.
+      // As a result current Safari will end up with the wrong size if browser zoom is in use.
+      // I'm clamping devicePixelRatio between 1–2 here to guard against extreme fail cases, but
+      // it also causes non-zoomed viewports that actually have a devicePixelRatio beyond that range
+      // to use the wrong size. Whatever. I hate this.
+      const vagueDevicePixelRatio = Math.min(Math.max(window.devicePixelRatio, 1), 2);
+      width = Math.round(entry.contentBoxSize[0].inlineSize * vagueDevicePixelRatio);
+      height = Math.round(entry.contentBoxSize[0].blockSize * vagueDevicePixelRatio);
     }
 
     resize();
