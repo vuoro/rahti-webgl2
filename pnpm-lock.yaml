@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   '@vuoro/rahti':
-    specifier: ^9.3.1
-    version: 9.3.1
+    specifier: ^9.3.3
+    version: 9.3.3
   gl-mat4-esm:
     specifier: ^1.1.4
     version: 1.1.4
@@ -213,8 +213,8 @@ packages:
     dev: true
     optional: true
 
-  /@vuoro/rahti@9.3.1:
-    resolution: {integrity: sha512-OIgtnVIZEvC9YYwV787ZayIh8Yi9ld7t83L6WpQTCzuNcUMl94iUVCv16Xf+5r+Od0Fm2chOUXXO18Mt4IX+sg==}
+  /@vuoro/rahti@9.3.3:
+    resolution: {integrity: sha512-2nmClyzMgTJLPMZdZG3+nwqecytNQef9LnUtXWD/Exo8xpKK02qqQaQV3zJws2HAqIJQJ03UppK4OC740XTp4g==}
     dev: false
 
   /esbuild@0.17.18:
