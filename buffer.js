@@ -95,7 +95,7 @@ export const Buffer = function ({
         firstDirty * BYTES_PER_ELEMENT,
         allData,
         firstDirty,
-        lastDirty - firstDirty
+        lastDirty - firstDirty,
       );
     }
 
@@ -108,12 +108,10 @@ export const Buffer = function ({
   bufferObject.set = set;
   bufferObject.update = update;
 
-  this.run(CleanUp, {
-    cleaner: () => {
-      gl.deleteBuffer(buffer);
-      cancelPreRenderJob(commitUpdates);
-      cancelPreRenderJob(set);
-    },
+  this.run(CleanUp, null, () => {
+    gl.deleteBuffer(buffer);
+    cancelPreRenderJob(commitUpdates);
+    cancelPreRenderJob(set);
   });
 
   return bufferObject;

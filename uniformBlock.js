@@ -97,7 +97,7 @@ export const UniformBlock = function ({ context, uniforms: uniformMap }) {
       firstDirty * BYTES_PER_ELEMENT,
       allData,
       firstDirty,
-      lastDirty - firstDirty
+      lastDirty - firstDirty,
     );
 
     firstDirty = Infinity;
@@ -106,11 +106,9 @@ export const UniformBlock = function ({ context, uniforms: uniformMap }) {
     requestRendering();
   };
 
-  this.run(CleanUp, {
-    cleaner: () => {
-      cancelPreRenderJob(commitUpdate);
-      gl.deleteBuffer(buffer);
-    },
+  this.run(CleanUp, null, () => {
+    cancelPreRenderJob(commitUpdate);
+    gl.deleteBuffer(buffer);
   });
 
   return { uniforms, update, bindIndex };

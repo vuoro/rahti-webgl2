@@ -154,7 +154,7 @@ export const Instances = function ({ context, attributes: attributeMap }) {
       }
     }
 
-    this.run(CleanUp, { cleaner: cleanInstance });
+    this.run(CleanUp, null, cleanInstance);
 
     return id;
   };
@@ -175,11 +175,9 @@ export const Instances = function ({ context, attributes: attributeMap }) {
   InstanceCreator.rahti_instances = instancesToSlots;
 
   let dead = false;
-  this.run(CleanUp, {
-    cleaner: () => {
-      preRenderJobs.delete(buildInstances);
-      dead = true;
-    },
+  this.run(CleanUp, null, () => {
+    preRenderJobs.delete(buildInstances);
+    dead = true;
   });
 
   return InstanceCreator;

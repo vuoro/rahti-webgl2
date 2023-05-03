@@ -190,14 +190,12 @@ export const Context = function ({
   canvas.addEventListener("webglcontextlost", handleLost);
   canvas.addEventListener("webglcontextrestored", handleRestored);
 
-  this.run(CleanUp, {
-    cleaner: () => {
-      stopped = true;
-      cancelJobsAndStopFrame();
-      observer.disconnect();
-      canvas.removeEventListener("webglcontextlost", handleLost);
-      canvas.removeEventListener("webglcontextrestored", handleRestored);
-    },
+  this.run(CleanUp, null, () => {
+    stopped = true;
+    cancelJobsAndStopFrame();
+    observer.disconnect();
+    canvas.removeEventListener("webglcontextlost", handleLost);
+    canvas.removeEventListener("webglcontextrestored", handleRestored);
   });
 
   let renderFunction;

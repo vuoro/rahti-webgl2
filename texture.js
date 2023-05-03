@@ -69,11 +69,9 @@ export const Texture = function ({
   gl[storer](TARGET, levels, INTERNAL_FORMAT, width, height);
   if (pixels) update(pixels, 0, 0, width, height);
 
-  this.run(CleanUp, {
-    cleaner: () => {
-      cancelPreRenderJob(generateMipmaps);
-      gl.deleteTexture(texture);
-    },
+  this.run(CleanUp, null, () => {
+    cancelPreRenderJob(generateMipmaps);
+    gl.deleteTexture(texture);
   });
 
   return { shaderType, update, index: textureIndexes.get(texture) };

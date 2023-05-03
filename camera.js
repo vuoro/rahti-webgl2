@@ -169,10 +169,8 @@ export const Camera = function ({
   };
 
   context.subscribe(handleResize);
-  this.run(CleanUp, {
-    cleaner: () => {
-      context.unsubscribe(handleResize);
-    },
+  this.run(CleanUp, null, () => {
+    context.unsubscribe(handleResize);
   });
 
   const proxyHandler = {

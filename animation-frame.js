@@ -40,7 +40,7 @@ const runComponents = (timestamp, sinceLastFrame, frameNumber) => {
 
 export const AnimationFrame = function () {
   componentSubscribers.add(this.id);
-  this.run(CleanUp, { cleaner: cleanAnimationFrame });
+  this.run(CleanUp, null, cleanAnimationFrame);
   subscribeToAnimationFrame(runComponents);
 
   return componentProps;

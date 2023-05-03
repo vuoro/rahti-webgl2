@@ -137,18 +137,16 @@ ${fragment}`;
   measureCount();
 
   // Rahti cleanup
-  this.run(CleanUp, {
-    cleaner: () => {
-      gl.deleteShader(vertexShader);
-      gl.deleteShader(fragmentShader);
-      gl.deleteProgram(program);
-      gl.deleteVertexArray(vao);
+  this.run(CleanUp, null, () => {
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+    gl.deleteProgram(program);
+    gl.deleteVertexArray(vao);
 
-      for (const key in attributes) {
-        const { countSubscribers } = attributes[key];
-        countSubscribers.delete(measureCount);
-      }
-    },
+    for (const key in attributes) {
+      const { countSubscribers } = attributes[key];
+      countSubscribers.delete(measureCount);
+    }
   });
 
   // Attributes
