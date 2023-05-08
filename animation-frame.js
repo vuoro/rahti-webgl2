@@ -82,7 +82,11 @@ export const cancelJobsAndStopFrame = () => {
 
 let lastTime = performance.now();
 
-const runAnimationFrame = (timestamp) => {
+const runAnimationFrame = () => {
+  // Using performance.now() here because in Safari the timestamp
+  // passed by RAF is currently not a DOMHighResTimeStamp.
+  // I don't know why.
+  const timestamp = performance.now();
   const sinceLastFrame = timestamp - lastTime;
   lastTime = timestamp;
 
