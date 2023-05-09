@@ -6,9 +6,14 @@ const defaultAttributes = {
   alpha: true,
 };
 
+const defaultHints = {
+  FRAGMENT_SHADER_DERIVATIVE_HINT: "NICEST",
+};
+
 export const Context = function ({
   canvas,
   attributes: inputAttributes,
+  hints: inputHints,
   clearColor = [0, 0, 0, 1],
   pixelRatio = 1,
   debug = false,
@@ -23,6 +28,13 @@ export const Context = function ({
   if ("drawingBufferColorSpace" in gl) gl.drawingBufferColorSpace = drawingBufferColorSpace;
   if ("unpackColorSpace" in gl) gl.unpackColorSpace = unpackColorSpace;
   const textureIndexes = new Map();
+
+  // Hints
+  const hints = { ...defaultHints, ...inputHints };
+  for (const target in hints) {
+    const mode = hints[target];
+    gl.hint(gl[target], gl[mode]);
+  }
 
   // Caches and setters
   let currentProgram = null;

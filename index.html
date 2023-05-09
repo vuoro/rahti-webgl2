@@ -5,7 +5,7 @@
   <p>
     There should be a bunch of squares that constantly get added and removed, and sometimes the
     existing ones should change color. There should also be a grey triangle that warps to fit the
-    viewport, and slowly gets filled with random colors.
+    viewport, has an antialiased line going through it, and slowly gets filled with random colors.
   </p>
   <canvas id="canvas" style="width: 100%; height: 100vh"></canvas>
 
@@ -80,8 +80,17 @@
             in vec2 textureCoordinates;
             out vec4 fragment;
 
+            float fDistance(float x) {
+              return length(vec2(dFdx(x), dFdy(x)));
+            }
+
+            float aLine(float threshold, float value, float thickness) {
+              return clamp(thickness - abs(threshold - value) / fDistance(value), 0.0, 1.0);
+            }
+
             void main () {
               fragment = vec4(texture(smallTexture, textureCoordinates).rgb, 1.0);
+              fragment.rgb *= 1.0 - aLine(0.5, length(textureCoordinates), 1.0);
             }
           `,
       });
