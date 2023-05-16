@@ -1,6 +1,5 @@
 import { CleanUp, updateParent } from "@vuoro/rahti";
 
-const animationFrameSets = new Map();
 export const preRenderJobs = new Set();
 export const renderJobs = new Set();
 export const postRenderJobs = new Set();
