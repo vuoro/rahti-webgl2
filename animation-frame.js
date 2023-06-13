@@ -86,7 +86,7 @@ const runAnimationFrame = () => {
   // passed by RAF is currently not a DOMHighResTimeStamp.
   // I don't know why.
   const timestamp = performance.now();
-  const sinceLastFrame = Math.min(timestamp - lastTime, 0.1);
+  const sinceLastFrame = Math.min(timestamp - lastTime, 100);
   lastTime = timestamp;
 
   for (const callback of subscribers) {
