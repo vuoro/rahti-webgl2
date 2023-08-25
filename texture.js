@@ -30,6 +30,7 @@ export const Texture = function ({
   premultiplyAlpha = false,
   unpackAlignment,
   parameters = mipmaps ? defaultMipParameters : defaultParameters,
+  anisotropicFiltering = false,
 }) {
   const { gl, setTexture, requestRendering, textureIndexes } = context;
 
@@ -44,6 +45,19 @@ export const Texture = function ({
   if (parameters) {
     for (const key in parameters) {
       gl.texParameteri(gl.TEXTURE_2D, gl[key], gl[parameters[key]]);
+    }
+  }
+
+  if (anisotropicFiltering) {
+    const anisotropicExtension = gl.getExtension("EXT_texture_filter_anisotropic");
+
+    if (anisotropicExtension) {
+      const anisotropy = Math.min(
+        anisotropicFiltering,
+        gl.getParameter(anisotropicExtension.MAX_TEXTURE_MAX_ANISOTROPY_EXT),
+      );
+
+      gl.texParameterf(gl.TEXTURE_2D, anisotropicExtension.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
     }
   }
 
